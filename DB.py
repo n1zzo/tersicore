@@ -11,7 +11,7 @@ import pyodbc
 #     def search_keyword(keyword) -> IDlist
 
 class DB:
-    cnxn
+    cnxn = None
 
     def __init__(self):
         # Parse configuration file and generate connection string
@@ -22,6 +22,6 @@ class DB:
         database = config['DATABASE']['Database']
         uid = config['DATABASE']['UID']
         password = config['DATABASE']['Password']
-        conn_string = 'DRIVER='+driver+';SERVER='+server+';PORT='+port+
-                     ';DATABASE='+database+';UID='+uid+';PWD='+password
+        conn_string = ('DRIVER='+driver+';SERVER='+server+';PORT='+port+
+                     ';DATABASE='+database+';UID='+uid+';PWD='+password)
         self.cnxn = pyodbc.connect(conn_string)
