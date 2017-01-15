@@ -2,15 +2,15 @@ import configparser
 import pyodbc
 import uuid
 
-#class DB:
-#    def _init()
-#    def connect()
-#    def create_tables()
-#    def add_track(path, tag) -> ID
-#    def update_track(ID, tag)
-#    def get_path(ID) -> path
-#    def get_tag(ID) -> tag
-#    def search_keyword(keyword) -> IDlist
+# class DB:
+#     def _init()
+#     def connect()
+#     def create_tables()
+#     def add_track(path, tag) -> ID
+#     def update_track(ID, tag)
+#     def get_path(ID) -> path
+#     def get_tag(ID) -> tag
+#     def search_keyword(keyword) -> IDlist
 
 CREATE_TRACKS = ("CREATE TABLE Tracks ("
                  "UUID BINARY(16) PRIMARY KEY, track_number INTEGER, "
@@ -26,6 +26,7 @@ INSERT_TRACK = ("INSERT INTO Tracks(UUID, track_number, total_tracks, "
 UPDATE_TRACK = ("UPDATE Tracks SET track_number=?,total_tracks=?,"
                 "disc_number=?,total_discs=?,title=?,artist=?,album_artist=?,"
                 "date=?,label=?,ISRC=? WHERE UUID = UNHEX(?);")
+
 
 class DB:
     conn_string = None
@@ -45,9 +46,10 @@ class DB:
         uid = config['DATABASE']['UID']
         password = config['DATABASE']['Password']
 
-        self.conn_string = ('DRIVER='+driver+';SERVER='+server+
-                            ';PORT='+port+';DATABASE='+database+
-                            ';SOCKET='+socket+';UID='+uid+';PWD='+password)
+        self.conn_string = ('DRIVER=' + driver + ';SERVER=' + server +
+                            ';PORT=' + port + ';DATABASE=' + database +
+                            ';SOCKET=' + socket + ';UID=' + uid + ';PWD=' +
+                            password)
 
     def connect(self):
         self.cnxn = pyodbc.connect(self.conn_string)
@@ -81,18 +83,18 @@ class DB:
 if __name__ == "__main__":
     db = DB()
     db.connect()
-    #db.create_tables()
+    # db.create_tables()
 
     test_tag = {"track_number": 3,
                 "total_tracks": 20,
                 "disc_number": 2,
                 "total_discs": 1,
-                "title":"Funny Title",
-                "artist":"Happy Artists" ,
-                "album_artist":"Happy Artists Collection",
-                "date":"20-12-2016",
-                "label":"Greedy Records",
-                "isrc":"ASCGM2345"}
+                "title": "Funny Title",
+                "artist": "Happy Artists",
+                "album_artist": "Happy Artists Collection",
+                "date": "20-12-2016",
+                "label": "Greedy Records",
+                "isrc": "ASCGM2345"}
 
     id = db.add_track(test_tag)
     print("Inserted new track with UUID "+str(id))
