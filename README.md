@@ -1,10 +1,10 @@
 # MusicLibrary
 
-scanner --> database \
-user --> client --> database \
-client -[rpc]-> scanner  (???) \
-client -[rpc]-> transcoder \
-transcoder -> database -> user  (caching?) \
+scanner --> database
+user --> client --> database
+client -[rpc]-> scanner  (???)
+client -[rpc]-> transcoder
+transcoder -> database -> user  (caching?)
 
 ## DB Scheme
 
@@ -164,3 +164,7 @@ Software --> for every changed file
     Scanner --> DB.update_track(tag)
 
     repeat until all the new files have been read
+
+## Etherpad
+
+https://public.etherpad-mozilla.org/p/musiclibrary
