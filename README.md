@@ -1,10 +1,10 @@
 # MusicLibrary
 
-scanner --> database
-user --> client --> database
-client -[rpc]-> scanner  (???)
-client -[rpc]-> transcoder
-transcoder -> database -> user  (caching?)
+scanner --> database \
+user --> client --> database \
+client -[rpc]-> scanner  (???) \
+client -[rpc]-> transcoder \
+transcoder -> database -> user  (caching?) \
 
 ## DB Scheme
 
@@ -49,10 +49,13 @@ Tracks
 
 ## Internal APIs
 
+```
 def methodName(params) -> returnValue
 private function   _func(params)
 public  function   func(params)
+```
 
+```
 class DB:
     def connect()
     def init()
@@ -61,7 +64,9 @@ class DB:
     def get_path(ID) -> path
     def get_tag(ID) -> tag
     def search_keyword(keyword) -> IDlist
+```
 
+```
 class Scanner:
     def _get_paths_from_db()
     def _get_file_info(string path)
@@ -71,29 +76,37 @@ class Scanner:
     def job_stop_all()
     def job_remove(int jobid)
     def job_remove_all()
+```
 
+```
 class REST:
     def search(keyword) -> {albums : [albums], artists : [artists], titles : [titles]}
     def list_artists() ->  [artists]
     def list_albums() -> [albums]
     def list_titles() -> [titles]
     def get_resources(ID)
+```
 
+```
 class Core:
     def stream(path) -> streamID
     def stop(streamID)
+```
 
 ## Configuration file
 
+```
 [LIBRARY]
 BaseDirectory = /home/user/Music
 
 [DATABASE]
 Driver = {SQL Server}
 Server = localhost
+Port = 3210
 Database = test
 Username = me
 Password = me2
+```
 
 ##  Tag parsing
 
@@ -101,9 +114,9 @@ https://mutagen.readthedocs.io/en/latest/
 
 ## Database interface
 
-https://wiki.python.org/moin/DatabaseInterfaces
+https://wiki.python.org/moin/DatabaseInterfaces \
 ODBC support:
-https://github.com/mkleehammer/pyodbc
+https://github.com/mkleehammer/pyodbc \
 Data types
 https://msdn.microsoft.com/en-us/library/ms714556(v=vs.85).aspx
 
@@ -115,18 +128,19 @@ http://cherrypy.org/
 
 The software will have a modular structure, every piece will communicate with each other via IPC.
 The main components will be:
-    - Library Scanner Daemon
-    - Media Backend (read + [transcode +] stream) accessible via REST
-    - Web Interface
-    - DBMS
+
+- Library Scanner Daemon
+- Media Backend (read + [transcode +] stream) accessible via REST
+- Web Interface
+- DBMS
 
 ## Use case
 
 1) Library bootstrap
 
-User --> Launch Software
-DB --> connect(), if database is empty init()
-Software --> empty library
+User --> Launch Software \
+DB --> connect(), if database is empty init() \
+Software --> empty library \
 Software --> Scanner.start()
 
     Scanner --> scan config[BaseDirectory] path and for every file
@@ -140,9 +154,9 @@ Software --> Scanner.start()
 
 2) Database update
 
-User --> Launch Software
-DB --> connect(), if database is empty init()
-Software --> inotify changed file in config[BaseDirectory]
+User --> Launch Software \
+DB --> connect(), if database is empty init() \
+Software --> inotify changed file in config[BaseDirectory] \
 Software --> for every changed file
 
     Scanner --> open file and read tag
