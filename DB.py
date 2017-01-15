@@ -46,10 +46,12 @@ class DB:
         uid = config['DATABASE']['UID']
         password = config['DATABASE']['Password']
 
-        self.conn_string = ('DRIVER=' + driver + ';SERVER=' + server +
-                            ';PORT=' + port + ';DATABASE=' + database +
-                            ';SOCKET=' + socket + ';UID=' + uid + ';PWD=' +
-                            password)
+        self.conn_string = 'DRIVER={};SERVER={};\
+                            PORT={};DATABASE={};\
+                            SOCKET={};UID={};PWD={}'.format(driver, server,
+                                                            port, database,
+                                                            socket, uid,
+                                                            password)
 
     def connect(self):
         self.cnxn = pyodbc.connect(self.conn_string)
@@ -97,6 +99,6 @@ if __name__ == "__main__":
                 "isrc": "ASCGM2345"}
 
     id = db.add_track(test_tag)
-    print("Inserted new track with UUID "+str(id))
+    print("Inserted new track with UUID", str(id))
     test_tag["title"] = "NEWTITLE"
     db.update_track(id, test_tag)
