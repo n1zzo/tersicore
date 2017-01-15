@@ -23,6 +23,10 @@ INSERT_TRACK = ("INSERT INTO Tracks(UUID, track_number, total_tracks, "
                 "disc_number, total_discs, title, artist, album_artist, "
                 "date, label, ISRC) values (UNHEX(?),?,?,?,?,?,?,?,?,?,?)")
 
+UPDATE_TRACK = ("UPDATE Tracks SET track_number=?,total_tracks=?,"
+                "disc_number=?,total_discs=?,title=?,artist=?,album_artist=?,"
+                "date=?,label=?,ISRC=? WHERE UUID = UNHEX(?);")
+
 class DB:
     conn_string = None
     cnxn = None
@@ -66,6 +70,14 @@ class DB:
         self.cursor.commit()
         return UUID
 
+    def update_track(self, UUID, tag):
+        self.cursor.execute(UPDATE_TRACK, tag["track_number"],
+                            tag["total_tracks"], tag["disc_number"],
+                            tag["total_discs"], tag["title"], tag["artist"],
+                            tag["album_artist"], tag["date"],
+                            tag["label"], tag["isrc"], UUID.hex)
+        self.cursor.commit()
+
 if __name__ == "__main__":
     db = DB()
     db.connect()
@@ -84,3 +96,5 @@ if __name__ == "__main__":
 
     id = db.add_track(test_tag)
     print("Inserted new track with UUID "+str(id))
+    test_tag["title"] = "NEWTITLE"
+    db.update_track(id, test_tag)
