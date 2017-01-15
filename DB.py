@@ -1,5 +1,6 @@
 import configparser
 import pyodbc
+import uuid
 
 #class DB:
 #    def _init()
@@ -17,6 +18,10 @@ CREATE_TRACKS = ("CREATE TABLE Tracks ("
                  "Total_discs INTEGER, Title VARCHAR(256) NOT NULL, "
                  "Artist VARCHAR(256) NOT NULL, AlbumArtist VARCHAR(256), "
                  "Date VARCHAR(256), Label VARCHAR(256), ISRC VARCHAR(256))")
+
+INSERT_TRACK = ("INSERT INTO PRODUCTS(UUID, Track_number, Total_tracks, "
+                "Disc_number, Total_discs, Title, Artists, AlbumArtist, "
+                "Date, Label, ISRC) values (UNHEX(?),?,?,?,?,?,?,?,?,?,?)")
 
 class DB:
     conn_string = None
@@ -51,8 +56,15 @@ class DB:
         self.cursor.execute(CREATE_TRACKS)
         self.cursor.commit()
 
+    def add_track(ID, tag):
+        UUID = uuid.uuid4()
+        self.cursor.execute(INSERT_TRACK, UUID.hex, tag.track_number,
+                            tag.total_discs, tag.title, tag.artists,
+                            tag.album, tag.albumArtist, tag.date, tag.label,
+                            tag.isrc)
+
 if __name__ == "__main__":
     db = DB()
     db.connect()
-    db.create_tables()
+    #db.create_tables()
 
