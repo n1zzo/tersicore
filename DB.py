@@ -13,15 +13,15 @@ import uuid
 #    def search_keyword(keyword) -> IDlist
 
 CREATE_TRACKS = ("CREATE TABLE Tracks ("
-                 "UUID BINARY(16) PRIMARY KEY, Track_number INTEGER, "
-                 "Total_tracks INTEGER, Disc_number INTEGER, "
-                 "Total_discs INTEGER, Title VARCHAR(256) NOT NULL, "
-                 "Artist VARCHAR(256) NOT NULL, AlbumArtist VARCHAR(256), "
-                 "Date VARCHAR(256), Label VARCHAR(256), ISRC VARCHAR(256))")
+                 "UUID BINARY(16) PRIMARY KEY, track_number INTEGER, "
+                 "total_tracks INTEGER, disc_number INTEGER, "
+                 "total_discs INTEGER, title VARCHAR(256) NOT NULL, "
+                 "artist VARCHAR(256) NOT NULL, album_artist VARCHAR(256), "
+                 "date VARCHAR(256), label VARCHAR(256), ISRC VARCHAR(256))")
 
-INSERT_TRACK = ("INSERT INTO PRODUCTS(UUID, Track_number, Total_tracks, "
-                "Disc_number, Total_discs, Title, Artists, AlbumArtist, "
-                "Date, Label, ISRC) values (UNHEX(?),?,?,?,?,?,?,?,?,?,?)")
+INSERT_TRACK = ("INSERT INTO Tracks(UUID, track_number, total_tracks, "
+                "disc_number, total_discs, title, artist, album_artist, "
+                "date, label, ISRC) values (UNHEX(?),?,?,?,?,?,?,?,?,?,?)")
 
 class DB:
     conn_string = None
@@ -56,15 +56,31 @@ class DB:
         self.cursor.execute(CREATE_TRACKS)
         self.cursor.commit()
 
-    def add_track(ID, tag):
+    def add_track(self, tag):
         UUID = uuid.uuid4()
-        self.cursor.execute(INSERT_TRACK, UUID.hex, tag.track_number,
-                            tag.total_discs, tag.title, tag.artists,
-                            tag.album, tag.albumArtist, tag.date, tag.label,
-                            tag.isrc)
+        self.cursor.execute(INSERT_TRACK, UUID.hex, tag["track_number"],
+                            tag["total_tracks"], tag["disc_number"],
+                            tag["total_discs"], tag["title"], tag["artist"],
+                            tag["album_artist"], tag["date"],
+                            tag["label"], tag["isrc"])
+        self.cursor.commit()
+        return UUID
 
 if __name__ == "__main__":
     db = DB()
     db.connect()
     #db.create_tables()
 
+    test_tag = {"track_number": 3,
+                "total_tracks": 20,
+                "disc_number": 2,
+                "total_discs": 1,
+                "title":"Funny Title",
+                "artist":"Happy Artists" ,
+                "album_artist":"Happy Artists Collection",
+                "date":"20-12-2016",
+                "label":"Greedy Records",
+                "isrc":"ASCGM2345"}
+
+    id = db.add_track(test_tag)
+    print("Inserted new track with UUID "+str(id))
