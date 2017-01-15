@@ -23,43 +23,43 @@ Users
 
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
-| ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
+| ID                       | BIGINT               | NO   | PRI | NULL    | auto_increment |
 
 Libraries
 
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
-| UUID                     | SQLCHAR[16]          | NO   | PRI | NULL    | auto_increment |
-| base_dir                 | SQLCHAR[256]         | NO   |     | NULL    |                |
-| owner                    | SQLUBIGINT           | NO   |     | NULL    |                |
+| UUID                     | BINARY[16]           | NO   | PRI | NULL    | auto_increment |
+| base_dir                 | VARCHAR[256]         | NO   |     | NULL    |                |
+| owner                    | BIGINT               | NO   |     | NULL    |                |
 
 Resources
 
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
-| UUID                     | SQLCHAR[16]          | NO   | PRI | NULL    | auto_increment |
-| track_UUID               | SQLCHAR[16]          | NO   |     | NULL    |                |
-| last_modified            | SQL_TIMESTAMP_STRUCT | NO   |     | NULL    |                |
-| codec                    | SQLUSMALLINT         | NO   |     | NULL    |                |
-| bitrate                  | SQLUSMALLINT         | NO   |     | NULL    |                |
-| owner                    | SQLUBIGINT           | NO   |     | NULL    |                |
-| path                     | SQLCHAR[256]         | NO   |     | NULL    |                |
+| UUID                     | BINARY[16]           | NO   | PRI | NULL    | auto_increment |
+| track_UUID               | VARCHAR[16]          | NO   |     | NULL    |                |
+| last_modified            | TIMESTAMP            | NO   |     | NULL    |                |
+| codec                    | SMALLINT             | NO   |     | NULL    |                |
+| bitrate                  | SMALLINT             | NO   |     | NULL    |                |
+| owner                    | BIGINT               | NO   |     | NULL    |                |
+| path                     | VARCHAR[256]         | NO   |     | NULL    |                |
 
 Tracks
 
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
-| UUID                     | SQLCHAR[16]          | NO   | PRI | NULL    | auto_increment |
-| track_number             | SQLUINTEGER          |      |     | NULL    |                |
-| total_tracks             | SQLUINTEGER          |      |     | NULL    |                |
-| disc_number              | SQLUINTEGER          |      |     | NULL    |                |
-| total_discs              | SQLUINTEGER          |      |     | NULL    |                |
-| title                    | SQLCHAR[256]         | NO   |     | NULL    |                |
-| artist                   | SQLCHAR[256]         | NO   |     | NULL    |                |
-| album_artist             | SQLCHAR[256]         |      |     | NULL    |                |
-| date                     | SQLCHAR[256]         |      |     | NULL    |                |
-| label                    | SQLCHAR[256]         |      |     | NULL    |                |
-| ISRC                     | SQLCHAR[256]         |      |     | NULL    |                |
+| UUID                     | BINARY[16]           | NO   | PRI | NULL    | auto_increment |
+| track_number             | INTEGER              |      |     | NULL    |                |
+| total_tracks             | INTEGER              |      |     | NULL    |                |
+| disc_number              | INTEGER              |      |     | NULL    |                |
+| total_discs              | INTEGER              |      |     | NULL    |                |
+| title                    | VARCHAR[256]         | NO   |     | NULL    |                |
+| artist                   | VARCHAR[256]         | NO   |     | NULL    |                |
+| album_artist             | VARCHAR[256]         |      |     | NULL    |                |
+| date                     | VARCHAR[256]         |      |     | NULL    |                |
+| label                    | VARCHAR[256]         |      |     | NULL    |                |
+| ISRC                     | VARCHAR[256]         |      |     | NULL    |                |
 
 
 ## Internal APIs
