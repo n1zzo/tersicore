@@ -1,4 +1,4 @@
-import configparser
+from config import get_config
 import pyodbc
 import uuid
 
@@ -35,8 +35,7 @@ class DB:
 
     def __init__(self):
         # Parse configuration file and generate connection string
-        config = configparser.ConfigParser()
-        config.read('config.ini')
+        config = get_config()
 
         driver = config['DATABASE']['Driver']
         server = config['DATABASE']['Server']
