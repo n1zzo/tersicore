@@ -13,19 +13,28 @@ import uuid
 #     def search_keyword(keyword) -> IDlist
 
 CREATE_TRACKS = ("CREATE TABLE Tracks ("
-                 "UUID BINARY(16) PRIMARY KEY, track_number INTEGER, "
-                 "total_tracks INTEGER, disc_number INTEGER, "
-                 "total_discs INTEGER, title VARCHAR(256) NOT NULL, "
-                 "artist VARCHAR(256) NOT NULL, album_artist VARCHAR(256), "
-                 "date VARCHAR(256), label VARCHAR(256), ISRC VARCHAR(256))")
+                 "UUID BINARY(16) PRIMARY KEY, "
+                 "track_number INTEGER, "
+                 "total_tracks INTEGER, "
+                 "disc_number INTEGER, "
+                 "total_discs INTEGER, "
+                 "title VARCHAR(256) NOT NULL, "
+                 "artist VARCHAR(256) NOT NULL, "
+                 "album_artist VARCHAR(256), "
+                 "date VARCHAR(256), "
+                 "label VARCHAR(256), "
+                 "ISRC VARCHAR(256))")
 
-INSERT_TRACK = ("INSERT INTO Tracks(UUID, track_number, total_tracks, "
-                "disc_number, total_discs, title, artist, album_artist, "
-                "date, label, ISRC) values (UNHEX(?),?,?,?,?,?,?,?,?,?,?)")
+INSERT_TRACK = ("INSERT INTO Tracks("
+                "UUID, track_number, total_tracks, disc_number, total_discs, "
+                "title, artist, album_artist, date, label, ISRC) "
+                "values (UNHEX(?),?,?,?,?,?,?,?,?,?,?)")
 
-UPDATE_TRACK = ("UPDATE Tracks SET track_number=?,total_tracks=?,"
-                "disc_number=?,total_discs=?,title=?,artist=?,album_artist=?,"
-                "date=?,label=?,ISRC=? WHERE UUID = UNHEX(?);")
+UPDATE_TRACK = ("UPDATE Tracks "
+                "SET track_number=?, total_tracks=?, disc_number=?, "
+                "total_discs=?, title=?, artist=?, album_artist=?,"
+                "date=?,label=?,ISRC=? "
+                "WHERE UUID = UNHEX(?);")
 
 
 class DB:
