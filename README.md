@@ -15,11 +15,13 @@ TODO: since it will be federated use UUIDs instead of numeric IDs.
       original one and transcoded copies. Update db schema accordingly.
 
 Users
+
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
 | ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
 
 Paths
+
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
 | ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
@@ -27,6 +29,7 @@ Paths
 | Owner                    | SQLUBIGINT           | NO   |     | NULL    |                |
 
 Tracks
+
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
 | ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
