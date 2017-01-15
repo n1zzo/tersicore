@@ -4,15 +4,20 @@ scanner --> database
 user --> client --> database
 client -[rpc]-> scanner  (???)
 client -[rpc]-> transcoder
-transcoder -> database -> user  (caching?)
+transcoder -> database -> user  (caching?)git
 
-## DB Scheme
+## TODOs
 
-TODO: since it will be federated use UUIDs instead of numeric IDs.
+- since it will be federated use UUIDs instead of numeric IDs.
       everything the user can stream is a media resource. The user
       initially upload an original resource, but in the database
       there will be multiple resource for a single track: the
       original one and transcoded copies. Update db schema accordingly.
+
+- Define how to do multithreading and IPC in python
+
+
+## DB Scheme
 
 Users
 
@@ -20,32 +25,42 @@ Users
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
 | ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
 
-Paths
+Libraries
 
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
-| ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
-| Path                     | SQLCHAR *            | NO   |     | NULL    |                |
-| Owner                    | SQLUBIGINT           | NO   |     | NULL    |                |
+| UUID                     | SQLCHAR[16]          | NO   | PRI | NULL    | auto_increment |
+| base_dir                 | SQLCHAR[256]         | NO   |     | NULL    |                |
+| owner                    | SQLUBIGINT           | NO   |     | NULL    |                |
+
+Resources
+
+| Field                    | Type                 | Null | Key | Default | Extra          |
+| :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
+| UUID                     | SQLCHAR[16]          | NO   | PRI | NULL    | auto_increment |
+| track_UUID               | SQLCHAR[16]          | NO   |     | NULL    |                |
+| last_modified            | SQL_TIMESTAMP_STRUCT | NO   |     | NULL    |                |
+| codec                    | SQLUSMALLINT         | NO   |     | NULL    |                |
+| bitrate                  | SQLUSMALLINT         | NO   |     | NULL    |                |
+| owner                    | SQLUBIGINT           | NO   |     | NULL    |                |
+| path                     | SQLCHAR[256]         | NO   |     | NULL    |                |
 
 Tracks
 
 | Field                    | Type                 | Null | Key | Default | Extra          |
 | :----------------------- | :------------------- | :--- | :-- | :------ | :------------- |
-| ID                       | SQLUBIGINT           | NO   | PRI | NULL    | auto_increment |
-| Track_number             | SQLUINTEGER          |      |     | NULL    |                |
-| Total_tracks             | SQLUINTEGER          |      |     | NULL    |                |
-| Disc_number              | SQLUINTEGER          |      |     | NULL    |                |
-| Total_discs              | SQLUINTEGER          |      |     | NULL    |                |
-| Title                    | SQLCHAR *            | NO   |     | NULL    |                |
-| Artist                   | SQLCHAR *            | NO   |     | NULL    |                |
-| AlbumArtist              | SQLCHAR *            |      |     | NULL    |                |
-| Codec                    | SQLUSMALLINT         | NO   |     | NULL    |                |
-| Bitrate                  | SQLUSMALLINT         | NO   |     | NULL    |                |
-| Date                     | SQLCHAR *            |      |     | NULL    |                |
-| Label / Organization     | SQLCHAR *            |      |     | NULL    |                |
-| ISRC                     | SQLCHAR *            |      |     | NULL    |                |
-| LastModified             | SQL_TIMESTAMP_STRUCT | NO   |     | NULL    |                |
+| UUID                     | SQLCHAR[16]          | NO   | PRI | NULL    | auto_increment |
+| track_number             | SQLUINTEGER          |      |     | NULL    |                |
+| total_tracks             | SQLUINTEGER          |      |     | NULL    |                |
+| disc_number              | SQLUINTEGER          |      |     | NULL    |                |
+| total_discs              | SQLUINTEGER          |      |     | NULL    |                |
+| title                    | SQLCHAR[256]         | NO   |     | NULL    |                |
+| artist                   | SQLCHAR[256]         | NO   |     | NULL    |                |
+| album_artist             | SQLCHAR[256]         |      |     | NULL    |                |
+| date                     | SQLCHAR[256]         |      |     | NULL    |                |
+| label                    | SQLCHAR[256]         |      |     | NULL    |                |
+| ISRC                     | SQLCHAR[256]         |      |     | NULL    |                |
+
 
 ## Internal APIs
 
@@ -57,10 +72,9 @@ public  function   func(params)
 
 ```
 class DB:
-    def connect()
-    def init()
-    def add_track(string reource_path, tag) -> ID
-    def update_track(tag) -> ID
+    def _init()
+    def add_track(path, tag) -> ID
+    def update_track(ID, tag)
     def get_path(ID) -> path
     def get_tag(ID) -> tag
     def search_keyword(keyword) -> IDlist
@@ -96,9 +110,6 @@ class Core:
 ## Configuration file
 
 ```
-[LIBRARY]
-BaseDirectory = /home/user/Music
-
 [DATABASE]
 Driver = {SQL Server}
 Server = localhost
@@ -119,6 +130,7 @@ ODBC support:
 https://github.com/mkleehammer/pyodbc \
 Data types
 https://msdn.microsoft.com/en-us/library/ms714556(v=vs.85).aspx
+We are storing UUID according to RFC4122
 
 ## Web Interface
 
@@ -165,6 +177,21 @@ Software --> for every changed file
 
     repeat until all the new files have been read
 
-## Etherpad
+## Installation
 
-https://public.etherpad-mozilla.org/p/musiclibrary
+Instructions to install on x86_64 linux:
+
+- install MySQL server
+- pip install -r requirements.txt
+- download [MySQL ODBC connector](http://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-5.3.7-linux-glibc2.5-x86-64bit.tar.gz)
+- extract it and move libmyodbc5a.so to /usr/lib/x86_64-linux-gnu/odbc/
+- create the file /etc/odbcinst.ini with the following content
+```
+[MySQL]
+Description = ODBC for MySQL
+Driver = /usr/lib/x86_64-linux-gnu/odbc/libmyodbc5a.so
+Setup = /usr/lib/x86_64-linux-gnu/odbc/libodbcmyS.so
+FileUsage = 1
+```
+- edit config.ini to reflect your database settings
+- done!
