@@ -120,43 +120,33 @@ class Database:
         with self._get_cursor() as cursor:
             cursor.execute(self.QUERY_DROP_ALL_TABLES)
 
-    def add_track(self, tag):
+    def add_track(self,
+            track_number=None, total_tracks=None,
+            disc_number=None, total_discs=None,
+            title=None, artist=None, album_artist=None,
+            date=None, label=None, isrc=None):
         UUID = uuid.uuid4()
         with self._get_cursor() as cursor:
             cursor.execute(self.QUERY_INSERT_TRACK,
-                    UUID.hex, tag["track_number"], tag["total_tracks"],
-                    tag["disc_number"], tag["total_discs"],
-                    tag["title"], tag["artist"], tag["album_artist"],
-                    tag["date"], tag["label"], tag["isrc"])
+                    UUID.hex,
+                    track_number, total_tracks,
+                    disc_number, total_discs,
+                    title, artist, album_artist,
+                    date, label, isrc)
         return UUID
 
-    def update_track(self, UUID, tag):
+    def update_track(self, uuid,
+            track_number=None, total_tracks=None,
+            disc_number=None, total_discs=None,
+            title=None, artist=None, album_artist=None,
+            date=None, label=None, isrc=None):
         with self._get_cursor() as cursor:
             cursor.execute(self.QUERY_UPDATE_TRACK,
-                    tag["track_number"], tag["total_tracks"],
-                    tag["disc_number"], tag["total_discs"],
-                    tag["title"], tag["artist"], tag["album_artist"],
-                    tag["date"], tag["label"], tag["isrc"], UUID.hex)
+                    track_number, total_tracks,
+                    disc_number, total_discs,
+                    title, artist, album_artist,
+                    date, label, isrc,
+                    uuid)
 
 if __name__ == "__main__":
-    db = Database()
-
-    test_tag =  {
-            "track_number": 3,
-            "total_tracks": 20,
-            "disc_number": 2,
-            "total_discs": 1,
-            "title": "Funny Title",
-            "artist": "Happy Artists",
-            "album_artist": "Happy Artists Collection",
-            "date": "20-12-2016",
-            "label": "Greedy Records",
-            "isrc": "ASCGM2345" }
-
-    id = db.add_track(test_tag)
-    print("Inserted new track with UUID", str(id))
-
-    test_tag["title"] = "NEWTITLE"
-    db.update_track(id, test_tag)
-
-    db._drop_tables()
+    pass
