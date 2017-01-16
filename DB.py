@@ -66,7 +66,6 @@ class Database:
             "    WHERE UUID = UNHEX(?);")
 
     connection = None
-    cursor = None
 
     def __init__(self):
         # Parse configuration file and generate connection string
@@ -88,40 +87,45 @@ class Database:
         self.connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
         self.connection.setencoding(encoding='utf-8')
 
-        self.cursor = self.connection.cursor()
-
     def _disconnect(self):
-        self.cursor.close()
         self.connection.close()
 
     def create_tables(self):
-        self.cursor.execute(self.QUERY_CREATE_TABLE_USERS)
-        self.cursor.execute(self.QUERY_CREATE_TABLE_TRACKS)
-        self.cursor.execute(self.QUERY_CREATE_TABLE_LIBRARIES)
-        self.cursor.execute(self.QUERY_CREATE_TABLE_RESOURCES)
-        self.cursor.commit()
+        cursor = self.connection.cursor()
+        cursor.execute(self.QUERY_CREATE_TABLE_USERS)
+        cursor.execute(self.QUERY_CREATE_TABLE_TRACKS)
+        cursor.execute(self.QUERY_CREATE_TABLE_LIBRARIES)
+        cursor.execute(self.QUERY_CREATE_TABLE_RESOURCES)
+        cursor.commit()
+        cursor.close()
 
     def drop_tables(self):
-        self.cursor.execute(self.QUERY_DROP_ALL_TABLES)
-        self.cursor.commit()
+        cursor = self.connection.cursor()
+        cursor.execute(self.QUERY_DROP_ALL_TABLES)
+        cursor.commit()
+        cursor.close()
 
     def add_track(self, tag):
+        cursor = self.connection.cursor()
         UUID = uuid.uuid4()
-        self.cursor.execute(self.QUERY_INSERT_TRACK,
+        cursor.execute(self.QUERY_INSERT_TRACK,
                 UUID.hex, tag["track_number"], tag["total_tracks"],
                 tag["disc_number"], tag["total_discs"],
                 tag["title"], tag["artist"], tag["album_artist"],
                 tag["date"], tag["label"], tag["isrc"])
-        self.cursor.commit()
+        cursor.commit()
+        cursor.close()
         return UUID
 
     def update_track(self, UUID, tag):
-        self.cursor.execute(self.QUERY_UPDATE_TRACK,
+        cursor = self.connection.cursor()
+        cursor.execute(self.QUERY_UPDATE_TRACK,
                 tag["track_number"], tag["total_tracks"],
                 tag["disc_number"], tag["total_discs"],
                 tag["title"], tag["artist"], tag["album_artist"],
                 tag["date"], tag["label"], tag["isrc"], UUID.hex)
-        self.cursor.commit()
+        cursor.commit()
+        cursor.close()
 
 if __name__ == "__main__":
     db = Database()
