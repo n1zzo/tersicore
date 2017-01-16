@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import pyodbc
 import uuid
 
+
 class Database:
     ODBC_CONNECT_STRING = (
             "DRIVER={};SERVER={};PORT={};DATABASE={};UID={};PWD={}")
@@ -147,6 +148,7 @@ class Database:
                     title, artist, album_artist,
                     date, label, isrc,
                     uuid)
+
 
 if __name__ == "__main__":
     pass
