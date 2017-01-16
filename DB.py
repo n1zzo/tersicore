@@ -2,19 +2,7 @@ from config import get_config
 import pyodbc
 import uuid
 
-# class DB:
-#     def _init()
-#     def connect()
-#     def create_tables()
-#     def drop_tables()
-#     def add_track(path, info, tag) -> ID
-#     def update_track(ID, tag)
-#     def get_path(ID) -> path
-#     def get_tag(ID) -> tag
-#     def search_keyword(keyword) -> IDlist
-
-
-class DB:
+class Database:
     ODBC_CONNECT_STRING = (
             "DRIVER={};SERVER={};PORT={};DATABASE={};UID={};PWD={}")
 
@@ -77,7 +65,7 @@ class DB:
             "        date=?,label=?,ISRC=?"
             "    WHERE UUID = UNHEX(?);")
 
-    cnxn = None
+    connection = None
     cursor = None
 
     def __init__(self):
@@ -93,13 +81,18 @@ class DB:
                 password = config['DATABASE']['Password'])
 
     def _connect(self, **kwargs):
-        self.cnxn = pyodbc.connect(self.ODBC_CONNECT_STRING.format(
+        self.connection = pyodbc.connect(self.ODBC_CONNECT_STRING.format(
                 kwargs['driver'], kwargs['host'], kwargs['port'],
                 kwargs['database'], kwargs['user'], kwargs['password']))
 
-        self.cursor = self.cnxn.cursor()
-        self.cnxn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
-        self.cnxn.setencoding(encoding='utf-8')
+        self.connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
+        self.connection.setencoding(encoding='utf-8')
+
+        self.cursor = self.connection.cursor()
+
+    def _disconnect(self):
+        self.cursor.close()
+        self.connection.close()
 
     def create_tables(self):
         self.cursor.execute(self.QUERY_CREATE_TABLE_USERS)
@@ -131,7 +124,7 @@ class DB:
         self.cursor.commit()
 
 if __name__ == "__main__":
-    db = DB()
+    db = Database()
     db.drop_tables()
     db.create_tables()
 
