@@ -61,7 +61,7 @@ class Database:
            "SELECT UUID, track_number, total_tracks, disc_number, total_discs,"
             "        title, artist, album_artist, album, date, label, ISRC"
             "    FROM Tracks"
-            "    WHERE UUID = ?")
+            "    WHERE UUID = UNHEX(?)")
 
     QUERY_INSERT_TRACK = (
             "INSERT INTO Tracks("
@@ -140,22 +140,25 @@ class Database:
 
     def get_track_by_uuid(self, uuid):
         with self._get_cursor() as cursor:
-            cursor.execute(self.QUERY_SELECT_TRACK_BY_UUID)
+            cursor.execute(self.QUERY_SELECT_TRACK_BY_UUID, uuid.hex)
             row = cursor.fetchone()
 
-            return self.Track(
-                    uuid=row.uuid,
-                    track_number=row.track_number,
-                    total_tracks=row.total_tracks,
-                    disc_number=row.disc_number,
-                    total_discs=row.total_discs,
-                    title=row.title,
-                    artist=row.artist,
-                    album_artist=row.album_artist,
-                    album=row.album,
-                    date=row.date,
-                    label=row.label,
-                    isrc=row.isrc)
+            if row:
+                return self.Track(
+                     uuid=row.UUID,
+                     track_number=row.track_number,
+                     total_tracks=row.total_tracks,
+                     disc_number=row.disc_number,
+                     total_discs=row.total_discs,
+                     title=row.title,
+                     artist=row.artist,
+                     album_artist=row.album_artist,
+                     album=row.album,
+                     date=row.date,
+                     label=row.label,
+                     isrc=row.ISRC)
+            else:
+                return None
 
     def add_track(self, track):
         uuid = uuid4()
@@ -175,7 +178,7 @@ class Database:
                     track.disc_number, track.total_discs,
                     track.title, track.artist, track.album_artist, track.album,
                     track.date, track.label, track,isrc,
-                    track.uuid)
+                    track.uuid.hex)
 
 
 if __name__ == "__main__":
