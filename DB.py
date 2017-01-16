@@ -14,7 +14,7 @@ import uuid
 #     def search_keyword(keyword) -> IDlist
 
 
-class Database:
+class DB:
     QUERY_CREATE_TABLE_USERS = (
             "CREATE TABLE  Users ("
                 "ID        BIGINT        NOT NULL  AUTO_INCREMENT,"
