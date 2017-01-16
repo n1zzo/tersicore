@@ -79,6 +79,13 @@ class Database:
                 user     = config['DATABASE']['User'],
                 password = config['DATABASE']['Password'])
 
+        cursor = self.connection.cursor()
+        cursor.execute("SHOW TABLES;")
+        cursor.commit()
+        if cursor.tables().fetchone() is None:
+            self._create_tables()
+        cursor.close()
+
     def _connect(self, **kwargs):
         self.connection = pyodbc.connect(self.ODBC_CONNECT_STRING.format(
                 kwargs['driver'], kwargs['host'], kwargs['port'],
@@ -90,7 +97,7 @@ class Database:
     def _disconnect(self):
         self.connection.close()
 
-    def create_tables(self):
+    def _create_tables(self):
         cursor = self.connection.cursor()
         cursor.execute(self.QUERY_CREATE_TABLE_USERS)
         cursor.execute(self.QUERY_CREATE_TABLE_TRACKS)
@@ -99,7 +106,7 @@ class Database:
         cursor.commit()
         cursor.close()
 
-    def drop_tables(self):
+    def _drop_tables(self):
         cursor = self.connection.cursor()
         cursor.execute(self.QUERY_DROP_ALL_TABLES)
         cursor.commit()
@@ -129,8 +136,6 @@ class Database:
 
 if __name__ == "__main__":
     db = Database()
-    db.drop_tables()
-    db.create_tables()
 
     test_tag =  {
             "track_number": 3,
@@ -146,5 +151,8 @@ if __name__ == "__main__":
 
     id = db.add_track(test_tag)
     print("Inserted new track with UUID", str(id))
+
     test_tag["title"] = "NEWTITLE"
     db.update_track(id, test_tag)
+
+    db._drop_tables()
