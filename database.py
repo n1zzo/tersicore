@@ -1,7 +1,9 @@
 from config import get_config
+
 from contextlib import contextmanager
+from collections import namedtuple
+from uuid import uuid4
 import pyodbc
-import uuid
 
 
 class Database:
@@ -26,6 +28,7 @@ class Database:
             "    title         VARCHAR(256)  NOT NULL,"
             "    artist        VARCHAR(256)  NOT NULL,"
             "    album_artist  VARCHAR(256),"
+            "    album         VARCHAR(256),"
             "    date          VARCHAR(256),"
             "    label         VARCHAR(256),"
             "    ISRC          VARCHAR(256),"
@@ -54,18 +57,32 @@ class Database:
     QUERY_DROP_ALL_TABLES = (
             "DROP TABLE IF EXISTS Resources, Libraries, Tracks, Users;")
 
+    QUERY_SELECT_TRACK_BY_UUID = (
+           "SELECT UUID, track_number, total_tracks, disc_number, total_discs,"
+            "        title, artist, album_artist, album, date, label, ISRC"
+            "    FROM Tracks"
+            "    WHERE UUID = ?")
+
     QUERY_INSERT_TRACK = (
             "INSERT INTO Tracks("
             "    UUID, track_number, total_tracks, disc_number, total_discs,"
-            "    title, artist, album_artist, date, label, ISRC)"
-            "VALUES (UNHEX(?),?,?,?,?,?,?,?,?,?,?);")
+            "    title, artist, album_artist, album, date, label, ISRC)"
+            "VALUES (UNHEX(?),?,?,?,?,?,?,?,?,?,?,?);")
 
     QUERY_UPDATE_TRACK = (
             "UPDATE Tracks"
-            "    SET track_number=?, total_tracks=?, disc_number=?,"
-            "        total_discs=?, title=?, artist=?, album_artist=?,"
-            "        date=?,label=?,ISRC=?"
+            "    SET track_number=?, total_tracks=?,"
+            "        disc_number=?, total_discs=?,"
+            "        title=?, artist=?, album_artist=?, album=?"
+            "        date=?, label=?, ISRC=?"
             "    WHERE UUID = UNHEX(?);")
+
+    Track = namedtuple('Track',
+            ['uuid',
+            'track_number', 'total_tracks',
+            'disc_number', 'total_discs',
+            'title', 'artist', 'album_artist', 'album',
+            'date', 'label', 'isrc'])
 
     connection = None
 
@@ -121,33 +138,44 @@ class Database:
         with self._get_cursor() as cursor:
             cursor.execute(self.QUERY_DROP_ALL_TABLES)
 
-    def add_track(self,
-            track_number=None, total_tracks=None,
-            disc_number=None, total_discs=None,
-            title=None, artist=None, album_artist=None,
-            date=None, label=None, isrc=None):
-        UUID = uuid.uuid4()
+    def get_track_by_uuid(self, uuid):
+        with self._get_cursor() as cursor:
+            cursor.execute(self.QUERY_SELECT_TRACK_BY_UUID)
+            row = cursor.fetchone()
+
+            return self.Track(
+                    uuid=row.uuid,
+                    track_number=row.track_number,
+                    total_tracks=row.total_tracks,
+                    disc_number=row.disc_number,
+                    total_discs=row.total_discs,
+                    title=row.title,
+                    artist=row.artist,
+                    album_artist=row.album_artist,
+                    album=row.album,
+                    date=row.date,
+                    label=row.label,
+                    isrc=row.isrc)
+
+    def add_track(self, track):
+        uuid = uuid4()
         with self._get_cursor() as cursor:
             cursor.execute(self.QUERY_INSERT_TRACK,
-                    UUID.hex,
-                    track_number, total_tracks,
-                    disc_number, total_discs,
-                    title, artist, album_artist,
-                    date, label, isrc)
-        return UUID
+                    uuid.hex,
+                    track.track_number, track.total_tracks,
+                    track.disc_number, track.total_discs,
+                    track.title, track.artist, track.album_artist, track.album,
+                    track.date, track.label, track.isrc)
+        return uuid
 
-    def update_track(self, uuid,
-            track_number=None, total_tracks=None,
-            disc_number=None, total_discs=None,
-            title=None, artist=None, album_artist=None,
-            date=None, label=None, isrc=None):
+    def update_track(self, track):
         with self._get_cursor() as cursor:
             cursor.execute(self.QUERY_UPDATE_TRACK,
-                    track_number, total_tracks,
-                    disc_number, total_discs,
-                    title, artist, album_artist,
-                    date, label, isrc,
-                    uuid)
+                    track.track_number, track.total_tracks,
+                    track.disc_number, track.total_discs,
+                    track.title, track.artist, track.album_artist, track.album,
+                    track.date, track.label, track,isrc,
+                    track.uuid)
 
 
 if __name__ == "__main__":
