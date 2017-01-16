@@ -1,5 +1,6 @@
 from database import Database
 
+
 class Track:
     uuid = None
     track_number = None
@@ -30,11 +31,11 @@ class Track:
                     self.title, self.artist, self.album_artist,
                     self.date, self.label, self.isrc)
         else:
-            self.db.add_track(uuid,
-                    track_number, total_tracks,
-                    disc_number, total_discs,
-                    title, artist, album_artist,
-                    date, label, isrc)
+            self.db.update_track(self.uuid,
+                    self.track_number, self.total_tracks,
+                    self.disc_number, self.total_discs,
+                    self.title, self.artist, self.album_artist,
+                    self.date, self.label, self.isrc)
 
 # TODO: why is this blowing db.add_track()? Asking the python gurus
 #    def __setattr__(self, name, value):
