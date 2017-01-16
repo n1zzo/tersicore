@@ -84,7 +84,7 @@ class Database:
             'title', 'artist', 'album_artist', 'album',
             'date', 'label', 'isrc'])
 
-    connection = None
+    _connection = None
 
     def __init__(self):
         # Parse configuration file and generate connection string
@@ -105,19 +105,19 @@ class Database:
 
     def _connect(self, driver=None, host=None, port=None, database=None,
             user=None, password=None):
-        self.connection = pyodbc.connect(self.ODBC_CONNECT_STRING.format(
+        self._connection = pyodbc.connect(self.ODBC_CONNECT_STRING.format(
                 driver, host, port, database, user, password))
 
-        self.connection.autocommit = False
-        self.connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
-        self.connection.setencoding(encoding='utf-8')
+        self._connection.autocommit = False
+        self._connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
+        self._connection.setencoding(encoding='utf-8')
 
     def _disconnect(self):
-        self.connection.close()
+        self._connection.close()
 
     @contextmanager
     def _get_cursor(self):
-        cursor = self.connection.cursor()
+        cursor = self._connection.cursor()
         try:
             yield cursor
         except pyodbc.DatabaseError as err:
