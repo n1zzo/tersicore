@@ -6,14 +6,22 @@ import uuid
 #     def _init()
 #     def connect()
 #     def create_tables()
-#     def add_track(path, tag) -> ID
+#     def drop_tables()
+#     def add_track(path, info, tag) -> ID
 #     def update_track(ID, tag)
 #     def get_path(ID) -> path
 #     def get_tag(ID) -> tag
 #     def search_keyword(keyword) -> IDlist
 
+CREATE_USERS = ("CREATE TABLE Users ("
+                "ID BIGINT NOT NULL AUTO_INCREMENT, "
+                "username VARCHAR(256) NOT NULL, "
+                "pw_hash BINARY(64) NOT NULL, "
+                "pw_salt BINARY(64) NOT NULL, "
+                "PRIMARY KEY(ID))")
+
 CREATE_TRACKS = ("CREATE TABLE Tracks ("
-                 "UUID BINARY(16) PRIMARY KEY, "
+                 "UUID BINARY(16) NOT NULL, "
                  "track_number INTEGER, "
                  "total_tracks INTEGER, "
                  "disc_number INTEGER, "
@@ -23,7 +31,28 @@ CREATE_TRACKS = ("CREATE TABLE Tracks ("
                  "album_artist VARCHAR(256), "
                  "date VARCHAR(256), "
                  "label VARCHAR(256), "
-                 "ISRC VARCHAR(256))")
+                 "ISRC VARCHAR(256), "
+                 "PRIMARY KEY(UUID))")
+
+CREATE_LIBRARIES = ("CREATE TABLE Libraries ("
+                    "UUID BINARY(16) NOT NULL, "
+                    "base_dir VARCHAR(256) NOT NULL, "
+                    "owner BIGINT NOT NULL, "
+                    "PRIMARY KEY(UUID), "
+                    "FOREIGN KEY(owner) REFERENCES Users(ID))")
+
+CREATE_RESOURCES = ("CREATE TABLE Resources ("
+                    "UUID BINARY(16) NOT NULL, "
+                    "track_UUID BINARY(16) NOT NULL, "
+                    "last_modified TIMESTAMP NOT NULL, "
+                    "codec SMALLINT NOT NULL, "
+                    "bitrate SMALLINT NOT NULL, "
+                    "owner BIGINT NOT NULL, "
+                    "path VARCHAR(256) NOT NULL, "
+                    "PRIMARY KEY(UUID), "
+                    "FOREIGN KEY(track_UUID) REFERENCES Tracks(UUID))")
+
+DROP_TABLES = ("DROP TABLE IF EXISTS Resources, Libraries, Tracks, Users;")
 
 INSERT_TRACK = ("INSERT INTO Tracks("
                 "UUID, track_number, total_tracks, disc_number, total_discs, "
@@ -69,7 +98,14 @@ class DB:
         self.cnxn.setencoding(encoding='utf-8')
 
     def create_tables(self):
+        self.cursor.execute(CREATE_USERS)
         self.cursor.execute(CREATE_TRACKS)
+        self.cursor.execute(CREATE_LIBRARIES)
+        self.cursor.execute(CREATE_RESOURCES)
+        self.cursor.commit()
+
+    def drop_tables(self):
+        self.cursor.execute(DROP_TABLES)
         self.cursor.commit()
 
     def add_track(self, tag):
@@ -93,7 +129,8 @@ class DB:
 if __name__ == "__main__":
     db = DB()
     db.connect()
-    # db.create_tables()
+    db.drop_tables()
+    db.create_tables()
 
     test_tag = {"track_number": 3,
                 "total_tracks": 20,
