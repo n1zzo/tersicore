@@ -1,4 +1,5 @@
 from config import get_config
+from contextlib import contextmanager
 import pyodbc
 import uuid
 
@@ -79,60 +80,63 @@ class Database:
                 user     = config['DATABASE']['User'],
                 password = config['DATABASE']['Password'])
 
-        cursor = self.connection.cursor()
-        cursor.execute("SHOW TABLES;")
-        cursor.commit()
-        if cursor.tables().fetchone() is None:
-            self._create_tables()
-        cursor.close()
+        with self._get_cursor() as cursor:
+            cursor.execute("SHOW TABLES;")
+            if cursor.tables().fetchone() is None:
+                self._create_tables()
 
-    def _connect(self, **kwargs):
+    def _connect(self, driver=None, host=None, port=None, database=None,
+            user=None, password=None):
         self.connection = pyodbc.connect(self.ODBC_CONNECT_STRING.format(
-                kwargs['driver'], kwargs['host'], kwargs['port'],
-                kwargs['database'], kwargs['user'], kwargs['password']))
+                driver, host, port, database, user, password))
 
+        self.connection.autocommit = False
         self.connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
         self.connection.setencoding(encoding='utf-8')
 
     def _disconnect(self):
         self.connection.close()
 
-    def _create_tables(self):
+    @contextmanager
+    def _get_cursor(self):
         cursor = self.connection.cursor()
-        cursor.execute(self.QUERY_CREATE_TABLE_USERS)
-        cursor.execute(self.QUERY_CREATE_TABLE_TRACKS)
-        cursor.execute(self.QUERY_CREATE_TABLE_LIBRARIES)
-        cursor.execute(self.QUERY_CREATE_TABLE_RESOURCES)
-        cursor.commit()
-        cursor.close()
+        try:
+            yield cursor
+        except pyodbc.DatabaseError as err:
+            cursor.rollback()
+        else:
+            cursor.commit()
+        finally:
+            cursor.close()
+
+    def _create_tables(self):
+        with self._get_cursor() as cursor:
+            cursor.execute(self.QUERY_CREATE_TABLE_USERS)
+            cursor.execute(self.QUERY_CREATE_TABLE_TRACKS)
+            cursor.execute(self.QUERY_CREATE_TABLE_LIBRARIES)
+            cursor.execute(self.QUERY_CREATE_TABLE_RESOURCES)
 
     def _drop_tables(self):
-        cursor = self.connection.cursor()
-        cursor.execute(self.QUERY_DROP_ALL_TABLES)
-        cursor.commit()
-        cursor.close()
+        with self._get_cursor() as cursor:
+            cursor.execute(self.QUERY_DROP_ALL_TABLES)
 
     def add_track(self, tag):
-        cursor = self.connection.cursor()
         UUID = uuid.uuid4()
-        cursor.execute(self.QUERY_INSERT_TRACK,
-                UUID.hex, tag["track_number"], tag["total_tracks"],
-                tag["disc_number"], tag["total_discs"],
-                tag["title"], tag["artist"], tag["album_artist"],
-                tag["date"], tag["label"], tag["isrc"])
-        cursor.commit()
-        cursor.close()
+        with self._get_cursor() as cursor:
+            cursor.execute(self.QUERY_INSERT_TRACK,
+                    UUID.hex, tag["track_number"], tag["total_tracks"],
+                    tag["disc_number"], tag["total_discs"],
+                    tag["title"], tag["artist"], tag["album_artist"],
+                    tag["date"], tag["label"], tag["isrc"])
         return UUID
 
     def update_track(self, UUID, tag):
-        cursor = self.connection.cursor()
-        cursor.execute(self.QUERY_UPDATE_TRACK,
-                tag["track_number"], tag["total_tracks"],
-                tag["disc_number"], tag["total_discs"],
-                tag["title"], tag["artist"], tag["album_artist"],
-                tag["date"], tag["label"], tag["isrc"], UUID.hex)
-        cursor.commit()
-        cursor.close()
+        with self._get_cursor() as cursor:
+            cursor.execute(self.QUERY_UPDATE_TRACK,
+                    tag["track_number"], tag["total_tracks"],
+                    tag["disc_number"], tag["total_discs"],
+                    tag["title"], tag["artist"], tag["album_artist"],
+                    tag["date"], tag["label"], tag["isrc"], UUID.hex)
 
 if __name__ == "__main__":
     db = Database()
