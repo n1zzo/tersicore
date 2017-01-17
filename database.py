@@ -42,22 +42,34 @@ class Database:
     def drop_tables(self):
         self.metadata.drop_all(self.engine)
 
-    def add_track(self, tag):
-        UUID = uuid.uuid4().hex[:16]  # FIXME: field size too small
-        ins = self.tracks.insert().values(UUID=UUID, **tag)
-        self.engine.execute(ins)
-        return UUID
+    def add_track(self, track):
+        if "UUID" in track:
+            track_ = track
+        else:
+            UUID = uuid.uuid4().hex[:16]  # FIXME: field size too small
+            track_ = track.copy()
+            track_["UUID"] = UUID
 
-    def update_track(self, UUID, tag):
-        # FIXME: not tested
-        upd = self.tracks.update().values(UUID=UUID, **tag)
-        self.engine.execute(upd)
+        insert = self.tracks.insert().values(**track_)
+        self.engine.execute(insert)
+
+        return track_["UUID"]
+
+    def update_track(self, track):
+        update = self.tracks.update().values(**track)
+        self.engine.execute(update)
+
+    def get_track(self, UUID):
+        select = sql.select([self.tracks])\
+                 .where(self.tracks.c.UUID == UUID)
+        result = self.engine.execute(select).first()
+        return dict(result)
 
 
 if __name__ == "__main__":
     db = Database()
 
-    test_tag = {
+    test_track = {
         "track_number": 3,
         "total_tracks": 20,
         "disc_number": 2,
@@ -69,10 +81,12 @@ if __name__ == "__main__":
         "label": "Greedy Records",
         "ISRC": "ASCGM2345"}
 
-    track_id = db.add_track(test_tag)
+    track_id = db.add_track(test_track)
     print("Inserted new track with UUID", str(track_id))
 
-    test_tag["title"] = "NEWTITLE"
-    db.update_track(track_id, test_tag)
+    track = db.get_track(track_id)
+
+    track["title"] = "NEWTITLE"
+    db.update_track(track)
 
     db.drop_tables()
