@@ -26,10 +26,16 @@ class Database:
     def __init__(self):
         conf = get_config()
         db_conf = conf["DATABASE"]
-        db_url = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}"\
+        db_url = "mysql+pymysql://{user}:{password}@{host}:{port}"\
                  .format(**db_conf)
 
         self.engine = sql.create_engine(db_url)
+
+        db_name = db_conf["database"]
+        self.engine.execute("CREATE DATABASE IF NOT EXISTS {};"
+                            .format(db_name))
+        self.engine.execute("USE {};".format(db_name))
+
         self.metadata = sql.MetaData()
         self.tracks = create_table_tracks(self.engine, self.metadata)
 
