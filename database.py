@@ -3,7 +3,6 @@ from uuid import uuid4
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
-import sqlalchemy.orm
 
 from config import get_config
 
@@ -34,32 +33,14 @@ class Database(object):
         isrc = sql.Column(sql.String(256))
 
         def __repr__(self):
-            return (
-                "<Track(uuid='%s', "
-                "track_number='%s', total_tracks='%s', "
-                "disc_number='%s', total_discs='%s', "
-                "title='%s', artist='%s', album_artist='%s', album='%s', "
-                "date='%s', label='%s', isrc='%s')>" % (
-                    self.uuid,
-                    self.track_number, self.total_tracks,
-                    self.disc_number, self.total_discs,
-                    self.title, self.artist, self.album_artist, self.album,
-                    self.date, self.label, self.isrc
-                    )
-                )
+            return str(self.__dict__)
 
     def __init__(self):
         config = get_config()
+        config_db = config['DATABASE']
 
         engine_str = "{driver}://{user}:{password}@{host}:{port}/{database}"\
-                .format(
-                    driver=config['DATABASE']['Driver'],
-                    user=config['DATABASE']['User'],
-                    password=config['DATABASE']['Password'],
-                    host=config['DATABASE']['Host'],
-                    port=config['DATABASE']['Port'],
-                    database=config['DATABASE']['Database']
-                    )
+                     .format(**config_db)
         self.engine = sql.create_engine(
             engine_str,
             echo=config.getboolean('GENERAL', 'Debug')
@@ -83,6 +64,7 @@ class Database(object):
             session.commit()
         finally:
             session.close()
+
 
 if __name__ == '__main__':
     db = Database()
