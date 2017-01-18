@@ -6,6 +6,8 @@ import sqlalchemy.ext.declarative
 
 from config import get_config
 
+from datetime import date
+
 
 class Database(object):
     Base = sql.ext.declarative.declarative_base()
@@ -39,8 +41,11 @@ class Database(object):
         config = get_config()
         config_db = config['DATABASE']
 
-        engine_str = "{driver}://{user}:{password}@{host}:{port}/{database}"\
-                     .format(**config_db)
+        if "sqlite" in config_db['driver']:
+            engine_str = "{driver}:///{path}".format(**config_db)
+        else:
+            engine_str = "{driver}://{user}:{password}@{host}:{port}/{database}"\
+                         .format(**config_db)
         self.engine = sql.create_engine(
             engine_str,
             echo=config.getboolean('GENERAL', 'Debug')
@@ -79,7 +84,7 @@ if __name__ == '__main__':
         album_artist='DJ Hazard; Distorted Minds',
         album='Mr Happy / Super Drunk',
         compilation=False,
-        date='2007-10-08',
+        date=date(2007, 10, 8),
         label='Playaz Recordings',
         isrc='PLAYAZ002'
         )
@@ -94,7 +99,7 @@ if __name__ == '__main__':
         album_artist='DJ Hazard; Distorted Minds',
         album='Mr Happy / Super Drunk',
         compilation=False,
-        date='2007-10-08',
+        date=date(2007, 10, 8),
         label='Playaz Recordings',
         isrc='PLAYAZ002'
         )
