@@ -15,6 +15,7 @@ def create_table_tracks(engine, metadata):
         sql.Column("title",        sql.String(256), nullable=False),
         sql.Column("artist",       sql.String(256), nullable=False),
         sql.Column("album_artist", sql.String(256)),
+        sql.Column("album",        sql.String(256)),
         sql.Column("date",         sql.String(256)),
         sql.Column("label",        sql.String(256)),
         sql.Column("ISRC",         sql.String(256)))
@@ -69,24 +70,34 @@ class Database:
 if __name__ == "__main__":
     db = Database()
 
-    test_track = {
+    track1 = {
         "track_number": 3,
         "total_tracks": 20,
         "disc_number": 2,
         "total_disks": 1,
-        "title": "Funny Title",
+        "title": "Funny Wrong Title",
         "artist": "Happy Artists",
         "album_artist": "Happy Artists Collection",
+        "album": "Magic Album",
         "date": "20-12-2016",
         "label": "Greedy Records",
         "ISRC": "ASCGM2345"}
 
-    track_id = db.add_track(test_track)
-    print("Inserted new track with UUID", str(track_id))
+    print()
+    print("Adding track with following values", track1)
 
-    track = db.get_track(track_id)
+    track1_id = db.add_track(track1)
+    print("Inserted new track with UUID", str(track1_id))
 
-    track["title"] = "NEWTITLE"
-    db.update_track(track)
+
+    print()
+    print("Updating track")
+
+    track2 = db.get_track(track1_id)
+    track2["title"] = "Funny Title"
+    db.update_track(track2)
+
+    print("New track has the following values", track2)
+    print(track2)
 
     db.drop_tables()
