@@ -15,6 +15,7 @@ def create_table_tracks(engine, metadata):
         sql.Column("title",        sql.String(256), nullable=False),
         sql.Column("artist",       sql.String(256), nullable=False),
         sql.Column("album_artist", sql.String(256)),
+        sql.Column("album",        sql.String(256)),
         sql.Column("date",         sql.String(256)),
         sql.Column("label",        sql.String(256)),
         sql.Column("ISRC",         sql.String(256)))
@@ -74,9 +75,10 @@ if __name__ == "__main__":
         "total_tracks": 20,
         "disc_number": 2,
         "total_disks": 1,
-        "title": "Funny Title",
+        "title": "Funny Wrong Title",
         "artist": "Happy Artists",
         "album_artist": "Happy Artists Collection",
+        "album": "Magic Album",
         "date": "20-12-2016",
         "label": "Greedy Records",
         "ISRC": "ASCGM2345"}
@@ -86,7 +88,7 @@ if __name__ == "__main__":
 
     track = db.get_track(track_id)
 
-    track["title"] = "NEWTITLE"
+    track["title"] = "Funny Title"
     db.update_track(track)
 
     db.drop_tables()
