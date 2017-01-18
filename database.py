@@ -1,103 +1,130 @@
+from contextlib import contextmanager
+from uuid import uuid4
+
 import sqlalchemy as sql
-import uuid
+import sqlalchemy.ext.declarative
+import sqlalchemy.orm
+
 from config import get_config
 
 
-def create_table_tracks(engine, metadata):
-    tracks = sql.Table(
-        "tracks", metadata,
-        sql.Column("UUID", sql.String(16), nullable=False,
-                   primary_key=True),
-        sql.Column("track_number", sql.Integer),
-        sql.Column("total_tracks", sql.Integer),
-        sql.Column("disc_number",  sql.Integer),
-        sql.Column("total_disks",  sql.Integer),
-        sql.Column("title",        sql.String(256), nullable=False),
-        sql.Column("artist",       sql.String(256), nullable=False),
-        sql.Column("album_artist", sql.String(256)),
-        sql.Column("album",        sql.String(256)),
-        sql.Column("date",         sql.String(256)),
-        sql.Column("label",        sql.String(256)),
-        sql.Column("ISRC",         sql.String(256)))
-    tracks.create(engine, checkfirst=True)
-    return tracks
+class Database(object):
+    Base = sql.ext.declarative.declarative_base()
+    Session = None
+    engine = None
 
+    class Track(Base):
+        def _new_uuid(self):
+            return uuid4().hex
 
-class Database:
+        __tablename__ = 'tracks'
+
+        uuid = sql.Column(sql.String(32), primary_key=True, default=_new_uuid)
+        track_number = sql.Column(sql.Integer)
+        total_tracks = sql.Column(sql.Integer)
+        disc_number = sql.Column(sql.Integer)
+        total_discs = sql.Column(sql.Integer)
+        title = sql.Column(sql.String(256))
+        artist = sql.Column(sql.String(256))
+        album_artist = sql.Column(sql.String(256))
+        album = sql.Column(sql.String(256))
+        compilation = sql.Column(sql.Boolean)
+        date = sql.Column(sql.Date)
+        label = sql.Column(sql.String(256))
+        isrc = sql.Column(sql.String(256))
+
+        def __repr__(self):
+            return (
+                "<Track(uuid='%s', "
+                "track_number='%s', total_tracks='%s', "
+                "disc_number='%s', total_discs='%s', "
+                "title='%s', artist='%s', album_artist='%s', album='%s', "
+                "date='%s', label='%s', isrc='%s')>" % (
+                    self.uuid,
+                    self.track_number, self.total_tracks,
+                    self.disc_number, self.total_discs,
+                    self.title, self.artist, self.album_artist, self.album,
+                    self.date, self.label, self.isrc
+                    )
+                )
+
     def __init__(self):
-        conf = get_config()
-        db_conf = conf["DATABASE"]
-        db_url = "mysql+pymysql://{user}:{password}@{host}:{port}"\
-                 .format(**db_conf)
+        config = get_config()
 
-        self.engine = sql.create_engine(db_url)
+        engine_str = "{driver}://{user}:{password}@{host}:{port}/{database}"\
+                .format(
+                    driver=config['DATABASE']['Driver'],
+                    user=config['DATABASE']['User'],
+                    password=config['DATABASE']['Password'],
+                    host=config['DATABASE']['Host'],
+                    port=config['DATABASE']['Port'],
+                    database=config['DATABASE']['Database']
+                    )
+        self.engine = sql.create_engine(
+            engine_str,
+            echo=config.getboolean('GENERAL', 'Debug')
+            )
 
-        db_name = db_conf["database"]
-        self.engine.execute("CREATE DATABASE IF NOT EXISTS {};"
-                            .format(db_name))
-        self.engine.execute("USE {};".format(db_name))
+        self.Base.metadata.create_all(self.engine)
 
-        self.metadata = sql.MetaData()
-        self.tracks = create_table_tracks(self.engine, self.metadata)
+        self.Session = sql.orm.sessionmaker(
+            bind=self.engine,
+            expire_on_commit=False
+            )
 
-    def drop_tables(self):
-        self.metadata.drop_all(self.engine)
-
-    def add_track(self, track):
-        if "UUID" in track:
-            track_ = track
+    @contextmanager
+    def get_session(self):
+        session = self.Session()
+        try:
+            yield session
+        except:
+            session.rollback()
         else:
-            UUID = uuid.uuid4().hex[:16]  # FIXME: field size too small
-            track_ = track.copy()
-            track_["UUID"] = UUID
+            session.commit()
+        finally:
+            session.close()
 
-        insert = self.tracks.insert().values(**track_)
-        self.engine.execute(insert)
-
-        return track_["UUID"]
-
-    def update_track(self, track):
-        update = self.tracks.update().values(**track)
-        self.engine.execute(update)
-
-    def get_track(self, UUID):
-        select = sql.select([self.tracks])\
-                 .where(self.tracks.c.UUID == UUID)
-        result = self.engine.execute(select).first()
-        return dict(result)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     db = Database()
 
-    track1 = {
-        "track_number": 3,
-        "total_tracks": 20,
-        "disc_number": 2,
-        "total_disks": 1,
-        "title": "Funny Wrong Title",
-        "artist": "Happy Artists",
-        "album_artist": "Happy Artists Collection",
-        "album": "Magic Album",
-        "date": "20-12-2016",
-        "label": "Greedy Records",
-        "ISRC": "ASCGM2345"}
+    track1 = db.Track(
+            track_number=1,
+            total_tracks=2,
+            disc_number=1,
+            total_discs=1,
+            title='Mr Happy mispelled',
+            artist='DJ Hazard; Distorted Minds',
+            album_artist='DJ Hazard; Distorted Minds',
+            album='Mr Happy / Super Drunk',
+            compilation=False,
+            date='2007-10-08',
+            label='Playaz Recordings',
+            isrc='PLAYAZ002'
+            )
 
-    print()
-    print("Adding track with following values", track1)
+    track2 = db.Track(
+            track_number=2,
+            total_tracks=2,
+            disc_number=1,
+            total_discs=1,
+            title='Super Drunk',
+            artist='DJ Hazard; Distorted Minds',
+            album_artist='DJ Hazard; Distorted Minds',
+            album='Mr Happy / Super Drunk',
+            compilation=False,
+            date='2007-10-08',
+            label='Playaz Recordings',
+            isrc='PLAYAZ002'
+            )
 
-    track1_id = db.add_track(track1)
-    print("Inserted new track with UUID", str(track1_id))
+    with db.get_session() as session:
+        session.add(track1)
+        session.add(track2)
+        print(track1, track2)
 
+    with db.get_session() as session:
+        session.add(track1)
+        track1.title = 'Mr Happy'
+        print(track1)
 
-    print()
-    print("Updating track")
-
-    track2 = db.get_track(track1_id)
-    track2["title"] = "Funny Title"
-    db.update_track(track2)
-
-    print("New track has the following values", track2)
-    print(track2)
-
-    db.drop_tables()
+    print(track1, track2)
