@@ -70,34 +70,34 @@ if __name__ == '__main__':
     db = Database()
 
     track1 = db.Track(
-            track_number=1,
-            total_tracks=2,
-            disc_number=1,
-            total_discs=1,
-            title='Mr Happy mispelled',
-            artist='DJ Hazard; Distorted Minds',
-            album_artist='DJ Hazard; Distorted Minds',
-            album='Mr Happy / Super Drunk',
-            compilation=False,
-            date='2007-10-08',
-            label='Playaz Recordings',
-            isrc='PLAYAZ002'
-            )
+        track_number=1,
+        total_tracks=2,
+        disc_number=1,
+        total_discs=1,
+        title='Mr Happy mispelled',
+        artist='DJ Hazard; Distorted Minds',
+        album_artist='DJ Hazard; Distorted Minds',
+        album='Mr Happy / Super Drunk',
+        compilation=False,
+        date='2007-10-08',
+        label='Playaz Recordings',
+        isrc='PLAYAZ002'
+        )
 
     track2 = db.Track(
-            track_number=2,
-            total_tracks=2,
-            disc_number=1,
-            total_discs=1,
-            title='Super Drunk',
-            artist='DJ Hazard; Distorted Minds',
-            album_artist='DJ Hazard; Distorted Minds',
-            album='Mr Happy / Super Drunk',
-            compilation=False,
-            date='2007-10-08',
-            label='Playaz Recordings',
-            isrc='PLAYAZ002'
-            )
+        track_number=2,
+        total_tracks=2,
+        disc_number=1,
+        total_discs=1,
+        title='Super Drunk',
+        artist='DJ Hazard; Distorted Minds',
+        album_artist='DJ Hazard; Distorted Minds',
+        album='Mr Happy / Super Drunk',
+        compilation=False,
+        date='2007-10-08',
+        label='Playaz Recordings',
+        isrc='PLAYAZ002'
+        )
 
     with db.get_session() as session:
         session.add(track1)
