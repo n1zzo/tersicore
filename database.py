@@ -70,7 +70,7 @@ class Database:
 if __name__ == "__main__":
     db = Database()
 
-    test_track = {
+    track1 = {
         "track_number": 3,
         "total_tracks": 20,
         "disc_number": 2,
@@ -83,12 +83,21 @@ if __name__ == "__main__":
         "label": "Greedy Records",
         "ISRC": "ASCGM2345"}
 
-    track_id = db.add_track(test_track)
-    print("Inserted new track with UUID", str(track_id))
+    print()
+    print("Adding track with following values", track1)
 
-    track = db.get_track(track_id)
+    track1_id = db.add_track(track1)
+    print("Inserted new track with UUID", str(track1_id))
 
-    track["title"] = "Funny Title"
-    db.update_track(track)
+
+    print()
+    print("Updating track")
+
+    track2 = db.get_track(track1_id)
+    track2["title"] = "Funny Title"
+    db.update_track(track2)
+
+    print("New track has the following values", track2)
+    print(track2)
 
     db.drop_tables()
