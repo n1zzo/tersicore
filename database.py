@@ -7,18 +7,31 @@ import sqlalchemy.ext.declarative
 from config import get_config
 
 
+def new_uuid():
+    return uuid4().hex
+
+
 class Database(object):
     Base = sql.ext.declarative.declarative_base()
     Session = None
     engine = None
 
-    class Track(Base):
-        def _new_uuid(self):
-            return uuid4().hex
+    class Resource(Base):
+        __tablename__ = 'resources'
 
+        uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
+        track_uuid = sql.Column(sql.String(32), sql.ForeignKey('tracks.uuid'))
+        path = sql.Column(sql.String(1024))
+        codec = sql.Column(sql.String(16))
+        bitrate = sql.Column(sql.String(16))
+
+        def __repr__(self):
+            return str(self.__dict__)
+
+    class Track(Base):
         __tablename__ = 'tracks'
 
-        uuid = sql.Column(sql.String(32), primary_key=True, default=_new_uuid)
+        uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
         track_number = sql.Column(sql.Integer)
         total_tracks = sql.Column(sql.Integer)
         disc_number = sql.Column(sql.Integer)
@@ -31,6 +44,8 @@ class Database(object):
         date = sql.Column(sql.Date)
         label = sql.Column(sql.String(256))
         isrc = sql.Column(sql.String(256))
+
+        resources = sql.orm.relationship('Resource')
 
         def __repr__(self):
             return str(self.__dict__)
@@ -102,11 +117,40 @@ if __name__ == '__main__':
     with db.get_session() as session:
         session.add(track1)
         session.add(track2)
+        print("We just added:")
+        print()
         print(track1, track2)
+        print()
+        print()
 
     with db.get_session() as session:
         session.add(track1)
         track1.title = 'Mr Happy'
+        print("We just updated:")
+        print()
         print(track1)
+        print()
+        print()
 
-    print(track1, track2)
+    with db.get_session() as session:
+        session.add(track1)
+        session.add(track2)
+        track1.resources = [
+            db.Resource(codec='ogg', bitrate='320', path='/music/track1.ogg'),
+            db.Resource(codec='mp3', bitrate='192', path='/music/track1.mp3')
+            ]
+        track2.resources = [
+            db.Resource(codec='ogg', bitrate='320', path='/music/track2.ogg'),
+            db.Resource(codec='mp3', bitrate='192', path='/music/track2.mp3')
+            ]
+        print("We just added the following resources:")
+        print()
+        print(track1.resources, track2.resources)
+        print()
+        print()
+
+    with db.get_session() as session:
+        print("Query:")
+        print()
+        q = session.query(db.Track, db.Resource).join(db.Resource).all()
+        print(q)
