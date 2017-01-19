@@ -56,10 +56,10 @@ class Database(object):
         config = get_config()
         config_db = config['DATABASE']
 
-        if "sqlite" in config_db['driver']:
-            engine_str = "{driver}:///{path}".format(**config_db)
+        if 'sqlite' in config_db['Driver']:
+            engine_str = '{driver}:///{path}'.format(**config_db)
         else:
-            engine_str = "{driver}://{user}:{password}@{host}:{port}/{database}"\
+            engine_str = '{driver}://{user}:{password}@{host}:{port}/{database}'\
                          .format(**config_db)
         self.engine = sql.create_engine(
             engine_str,
