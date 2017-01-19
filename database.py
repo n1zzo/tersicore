@@ -14,7 +14,7 @@ def new_uuid():
 
 
 class Database(object):
-    Base = sql.ext.declarative.declarative_base()
+    Base = sqlalchemy.ext.declarative.declarative_base()
     Session = None
     engine = None
 
@@ -56,13 +56,13 @@ class Database(object):
         config = get_config()
         config_db = config['DATABASE']
 
-        if 'sqlite' in config_db['Driver']:
-            engine_str = '{driver}:///{path}'.format(**config_db)
+        if config_db['Driver'] == 'sqlite':
+            eng_str = '{driver}:///{path}'.format(**config_db)
         else:
-            engine_str = '{driver}://{user}:{password}@{host}:{port}/{database}'\
-                         .format(**config_db)
+            eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}'\
+                      .format(**config_db)
         self.engine = sql.create_engine(
-            engine_str,
+            eng_str,
             echo=config.getboolean('GENERAL', 'Debug')
             )
 
