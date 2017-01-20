@@ -27,6 +27,8 @@ class Database(object):
         codec = sql.Column(sql.String(16))
         bitrate = sql.Column(sql.String(16))
 
+        track = sql.orm.relationship('Track', back_populates='resources')
+
         def __repr__(self):
             return str(self.__dict__)
 
@@ -47,7 +49,7 @@ class Database(object):
         label = sql.Column(sql.String(256))
         isrc = sql.Column(sql.String(256))
 
-        resources = sql.orm.relationship('Resource')
+        resources = sql.orm.relationship('Resource', back_populates='track')
 
         def __repr__(self):
             return str(self.__dict__)
