@@ -1,5 +1,5 @@
 from config import get_config
-# from database import Database
+from database import Database
 
 import os
 from time import sleep
@@ -37,18 +37,18 @@ class Scanner(Observer):
     def __init__(self, db, path, patterns):
         super().__init__()
 
-        self.patterns = patterns
+        self.db = db
         self.path = path
+        self.patterns = patterns
 
         handler = Handler(db, patterns=patterns, ignore_directories=True)
         self.schedule(handler, path, recursive=True)
 
     def start(self):
-        self.force_scan()
+        self.check_consistency()
         super().start()
 
-    def force_scan(self):
-
+    def check_consistency(self):
         def match(f):
             return any(fnmatch(f, pattern)
                        for pattern in self.patterns)
@@ -57,6 +57,14 @@ class Scanner(Observer):
                    for root, dirs, files in os.walk(path)
                    for f in files
                    if match(f)]
+
+        db = self.db
+        print(matches)
+        with db.get_session() as session:
+            q = session.query(db.Resource)\
+                .filter(~db.Resource.path.in_(matches)).all()
+            print('lel')
+            print(q)
 
         for file_name in matches:
             add_resource(file_name)
@@ -69,8 +77,7 @@ if __name__ == "__main__":
     path = conf["SCANNER"]["path"]
 
     log.debug('Initializing db connection')
-    # db = Database()
-    db = None
+    db = Database()
 
     scanner = Scanner(db, path, ["*.mp3", "*.flac", "*.ogg"])
     scanner.start()

@@ -80,7 +80,8 @@ class Database(object):
         session = self.Session()
         try:
             yield session
-        except:
+        except Exception as e:
+            print(e)
             session.rollback()
         else:
             session.commit()
