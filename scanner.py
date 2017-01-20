@@ -15,20 +15,19 @@ def update_file(path):
     print("Updating:", path)
 
 
-class Handler(PatternMatchingEventHandler):
-    def on_any_event(self, event):
-        print(event.src_path, event.event_type)
-        update_file(event.src_path)
-
-
 class Scanner(Observer):
+    class Handler(PatternMatchingEventHandler):
+        def on_any_event(self, event):
+            print(event.src_path, event.event_type)
+            update_file(event.src_path)
+
     def __init__(self, path, patterns):
         super().__init__()
 
         self.patterns = patterns
         self.path = path
 
-        handler = Handler(patterns=patterns, ignore_directories=True)
+        handler = Scanner.Handler(patterns=patterns, ignore_directories=True)
         self.schedule(handler, path, recursive=True)
 
     def start(self):
