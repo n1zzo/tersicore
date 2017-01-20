@@ -1,53 +1,54 @@
 from config import get_config
 from time import sleep
-from os import walk
-from os.path import splitext
+import os
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
+from fnmatch import fnmatch
+
+
+def add_file(path):
+    print("Adding:", path)
+
+
+def update_file(path):
+    print("Updating:", path)
 
 
 class Handler(PatternMatchingEventHandler):
     def on_any_event(self, event):
         print(event.src_path, event.event_type)
+        update_file(event.src_path)
 
 
 class Scanner(Observer):
-    def __init__(self, path):
+    def __init__(self, path, patterns):
         super().__init__()
-        handler = Handler(ignore_directories=True)
+
+        self.patterns = patterns
+        self.path = path
+
+        handler = Handler(patterns=patterns, ignore_directories=True)
         self.schedule(handler, path, recursive=True)
 
+    def start(self):
+        self.first_time_scan()
+        super().start()
 
-class LibraryBuilder:
+    def first_time_scan(self):
+        for root, dirs, files in os.walk(path):
+            for f in files:
+                for pattern in self.patterns:
+                    if fnmatch(f, pattern):
+                        add_file(os.path.join(root, f))
 
-    supported_exts = [".mp3", ".flac", ".ogg"]
-
-    def scanPath(self, path):
-        for root, dirs, files in walk(path):
-            if len(files) > 0:
-                self.addFiles(files, root)
-
-    def addFiles(self, files, path):
-        for track in files:
-            name, ext = splitext(path+track)
-            if ext in self.supported_exts:
-                print("Inserting file:")
-                print(name)
-                print("With extension:")
-                print(ext)
-                print("Having root:")
-                print(path)
-                # [TODO] Add file to db
 
 if __name__ == "__main__":
     conf = get_config()
     path = conf["SCANNER"]["path"]
 
-    builder = LibraryBuilder()
-    builder.scanPath(path)
-
-    scanner = Scanner(path)
+    # TODO: get patterns from config
+    scanner = Scanner(path, ["*.mp3", "*.flac", "*.ogg"])
     scanner.start()
     try:
         while True:
