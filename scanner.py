@@ -30,7 +30,7 @@ class Handler(PatternMatchingEventHandler):
         super().__init__(*args, **kwargs)
 
     def on_any_event(self, event):
-        update_file(event.src_path)
+        update_resource(event.src_path)
 
 
 class Scanner(Observer):
