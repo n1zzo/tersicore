@@ -59,12 +59,11 @@ class Scanner(Observer):
                    if match(f)]
 
         db = self.db
-        print(matches)
         with db.get_session() as session:
-            q = session.query(db.Resource)\
-                .filter(~db.Resource.path.in_(matches)).all()
-            print('lel')
-            print(q)
+            for res in session.query(db.Resource)\
+                    .filter(~db.Resource.path.in_(matches)).all():
+                session.delete(res)
+                log.debug('Removing {}'.format(res))
 
         for file_name in matches:
             add_resource(file_name)
