@@ -10,9 +10,20 @@ from datetime import date
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
-from mutagen import File
+from mutagen import apev2, id3, mp4, aiff, asf, aac, flac, oggvorbis, File
 
 log.basicConfig(filename='scanner.log', level=log.DEBUG)
+
+CODECS = {
+        apev2.APEv2File: "ape",
+        id3.ID3FileType: "mp3",
+        mp4.MP4: "mp4",
+        aiff.AIFF: "aiff",
+        asf.ASF: "wma",
+        aac.AAC: "aac",
+        flac.FLAC: "flac",
+        oggvorbis.OggVorbis: "ogg vorbis"
+        }
 
 
 def add_resource(db, path):
@@ -29,18 +40,24 @@ def add_resource(db, path):
         album_artist=tag["ensemble"],
         album=tag["album"],
         compilation=False,
-        date=date(tag["date"]),
+        # [FIXME] Handle conversion from date list to date object
+        date=date(1970, 1, 1),
         label=tag["organization"],
         isrc=tag["isrc"]
         )
+    track.resources = [
+        db.Resource(codec=CODECS[type(tag)],
+                    bitrate=tag.info.bitrate,
+                    path=path)
+        ]
 
     with db.get_session() as session:
         session.add(track)
-        track.resources = [
-            db.Resource(codec=getCodec(type(tag)),
-                        bitrate=tag.info.bitrate,
-                        path=path),
-        ]
+
+    # TESTING
+    print("Dump:")                                                         
+    q = session.query(db.Track, db.Resource).join(db.Resource).all()        
+    print(q)
 
 
 def getCodec(filetype):
