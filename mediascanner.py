@@ -29,6 +29,7 @@ class MediaScanner:
         self.db = Database()
         self.resources = self.get_resources_in_paths(self.paths)
 
+    def run(self):
         with self.db.get_session() as session:
             self.db.clean_resources(session, self.resources)
             for f in self.resources:
@@ -68,3 +69,4 @@ if __name__ == '__main__':
     formats = str(conf['SCANNER']['Formats']).split(',')
 
     app = MediaScanner(paths=paths, formats=formats)
+    app.run()
