@@ -35,17 +35,18 @@ def glob_match(path, globs):
     return any(fnmatch(path, glob) for glob in globs)
 
 
+class WatchdogHandler(PatternMatchingEventHandler):
+    def __init__(self, parent, *args, **kwargs):
+        self.parent = parent
+        self.db = parent.db
+        super().__init__(*args, **kwargs)
+
+    def on_any_event(self, event):
+        with self.db.get_session() as session:
+            self.parent.add_update_resource(session, event.src_path)
+
+
 class MediaScanner:
-    class WatchdogHandler(PatternMatchingEventHandler):
-        def __init__(self, parent, *args, **kwargs):
-            self.parent = parent
-            self.db = parent.db
-            super().__init__(*args, **kwargs)
-
-        def on_any_event(self, event):
-            with self.db.get_session() as session:
-                self.parent.add_update_resource(session, event.src_path)
-
     def __init__(self, paths=None, formats=None):
         self.paths = paths
         self.formats = formats
@@ -58,7 +59,7 @@ class MediaScanner:
                 self.add_update_resource(session, f)
 
         observers = {path: Observer() for path in self.paths}
-        handler = self.WatchdogHandler(
+        handler = WatchdogHandler(
             self,
             patterns=FORMATS_GLOB,
             ignore_directories=True
