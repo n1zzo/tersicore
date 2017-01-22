@@ -25,7 +25,17 @@ CODECS = {
 
 
 def add_resource(db, path):
-    log.debug('Adding {}'.format(path))
+    log.debug("Looking for {} in db...".format(path))
+
+    with db.get_session() as session:
+        try:
+            q = session.query(db.Resource)\
+                .filter(db.Resource.path == path).one()
+        except:
+            return
+        else:
+            pass
+
     tags = mutagen.File(path)
 
     track = db.Track(
