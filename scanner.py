@@ -7,47 +7,44 @@ from time import sleep
 from fnmatch import fnmatch
 from datetime import date
 
+import mutagen
+import mutagen.oggvorbis
+import mutagen.flac
+import mutagen.id3
+
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
-
-from mutagen import apev2, id3, mp4, aiff, asf, aac, flac, oggvorbis, File
 
 log.basicConfig(filename='scanner.log', level=log.DEBUG)
 
 CODECS = {
-        apev2.APEv2File: "ape",
-        id3.ID3FileType: "mp3",
-        mp4.MP4: "mp4",
-        aiff.AIFF: "aiff",
-        asf.ASF: "wma",
-        aac.AAC: "aac",
-        flac.FLAC: "flac",
-        oggvorbis.OggVorbis: "ogg vorbis"
+        mutagen.id3.ID3FileType: "mp3",
+        mutagen.flac.FLAC: "flac",
+        mutagen.oggvorbis.OggVorbis: "ogg vorbis"
         }
 
 
 def add_resource(db, path):
     log.debug('Adding {}'.format(path))
-    tag = File(path)
+    tags = mutagen.File(path)
 
     track = db.Track(
-        track_number=tag["tracknumber"],
-        total_tracks=tag["totaltracks"],
-        disc_number=tag["discnumber"],
-        total_discs=tag["totaldiscs"],
-        title=tag["title"],
-        artist=tag["artist"],
-        album_artist=tag["ensemble"],
-        album=tag["album"],
+        track_number=tags["tracknumber"],
+        total_tracks=tags["totaltracks"],
+        disc_number=tags["discnumber"],
+        total_discs=tags["totaldiscs"],
+        title=tags["title"],
+        artist=tags["artist"],
+        album_artist=tags["ensemble"],
+        album=tags["album"],
         compilation=False,
-        # [FIXME] Handle conversion from date list to date object
-        date=date(1970, 1, 1),
-        label=tag["organization"],
-        isrc=tag["isrc"]
+        date=date(int(tags['date'][0]), 1, 1),
+        label=tags["organization"],
+        isrc=tags["isrc"]
         )
     track.resources = [
-        db.Resource(codec=CODECS[type(tag)],
-                    bitrate=tag.info.bitrate,
+        db.Resource(codec=CODECS[type(tags)],
+                    bitrate=tags.info.bitrate,
                     path=path)
         ]
 
@@ -58,10 +55,6 @@ def add_resource(db, path):
     print("Dump:")                                                         
     q = session.query(db.Track, db.Resource).join(db.Resource).all()        
     print(q)
-
-
-def getCodec(filetype):
-    pass
 
 
 def update_resource(db, path):
