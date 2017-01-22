@@ -1,19 +1,21 @@
 from config import get_config
 from database import Database
 
-from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
-
 import os
 from time import sleep
 from datetime import date
 from fnmatch import fnmatch
 
-import mutagen, mutagen.oggvorbis, mutagen.id3
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
+
+import mutagen
+import mutagen.oggvorbis
+import mutagen.id3
 
 
 FORMATS = {
-    mutagen.id3.ID3FileType: { 
+    mutagen.id3.ID3FileType: {
         'pretty_name': 'mp3',
         'extensions': ['mp3']
         },
@@ -23,10 +25,10 @@ FORMATS = {
         }
     }
 
-FORMATS_GLOB = [ "*.{}".format(ext)
-                 for k, v in FORMATS.items()
-                 for ext in v['extensions']
-               ]
+FORMATS_GLOB = ["*.{}".format(ext)
+                for k, v in FORMATS.items()
+                for ext in v['extensions']
+                ]
 
 
 def glob_match(path, globs):
@@ -53,7 +55,7 @@ class MediaScanner:
             for f in self.get_resources_in_fs():
                 self.add_update_resource(session, f)
 
-        observers = { path: Observer() for path in self.paths }
+        observers = {path: Observer() for path in self.paths}
         handler = self.WatchdogHandler(
                 self.db,
                 patterns=FORMATS_GLOB,
@@ -72,20 +74,20 @@ class MediaScanner:
                 observer.join()
 
     def get_resources_in_fs(self):
-        return [ os.path.join(root, f)
-                 for path in self.paths
-                 for root, dirs, files in os.walk(path)
-                 for f in files
-                 if glob_match(f, FORMATS_GLOB) ]
+        return [os.path.join(root, f)
+                for path in self.paths
+                for root, dirs, files in os.walk(path)
+                for f in files
+                if glob_match(f, FORMATS_GLOB)
+                ]
 
     def get_resource_by_path(self, session, path):
         q = session.query(self.db.Resource)\
             .filter(self.db.Resource.path == path).one_or_none()
         return q
-        
 
     def clean_database(self, session):
-        q = session.query(self.db.Resource)\
+        session.query(self.db.Resource)\
             .filter(~self.db.Resource.path.in_(self.get_resources_in_fs()))\
             .delete(synchronize_session=False)
 
@@ -102,19 +104,19 @@ class MediaScanner:
         res.codec = FORMATS[type(media)]['pretty_name']
         res.bitrate = media.info.bitrate
 
-        res.track.track_number=media.tags["tracknumber"]
-        res.track.total_tracks=media.tags["totaltracks"]
-        res.track.disc_number=media.tags["discnumber"]
-        res.track.total_discs=media.tags["totaldiscs"]
-        res.track.title=media.tags["title"]
-        res.track.artist=media.tags["artist"]
-        res.track.album_artist=media.tags["ensemble"]
-        res.track.album=media.tags["album"]
-        res.track.compilation=False
-        res.track.date=date(int(media.tags['date'][0]), 1, 1)
-        res.track.label=media.tags["organization"]
-        res.track.isrc=media.tags["isrc"]
-        
+        res.track.track_number = media.tags['tracknumber']
+        res.track.total_tracks = media.tags['totaltracks']
+        res.track.disc_number = media.tags['discnumber']
+        res.track.total_discs = media.tags['totaldiscs']
+        res.track.title = media.tags['title']
+        res.track.artist = media.tags['artist']
+        res.track.album_artist = media.tags['ensemble']
+        res.track.album = media.tags['album']
+        res.track.compilation = False
+        res.track.date = date(int(media.tags['date'][0]), 1, 1)
+        res.track.label = media.tags['organization']
+        res.track.isrc = media.tags['isrc']
+
         session.add(res)
 
 
