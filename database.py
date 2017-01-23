@@ -24,10 +24,11 @@ class Database(object):
         track_uuid = sql.Column(sql.String(32), sql.ForeignKey(
             'tracks.uuid',
             ondelete='CASCADE'
-            ))
-        path = sql.Column(sql.String(1024))
-        codec = sql.Column(sql.String(16))
-        bitrate = sql.Column(sql.String(16))
+            ), nullable=False)
+        path = sql.Column(sql.String(1024), nullable=False, unique=True)
+        codec = sql.Column(sql.String(16), nullable=False)
+        sample_rate = sql.Column(sql.Integer, nullable=False)
+        bitrate = sql.Column(sql.Integer, nullable=False)
 
         def __repr__(self):
             return str(self.__dict__)

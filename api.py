@@ -30,6 +30,7 @@ class TracksRequest(object):
                     'resources': [{
                         'path': resource.path,
                         'codec': resource.codec,
+                        'sample_rate': resource.sample_rate,
                         'bitrate': resource.bitrate
                         } for resource in track.resources]
                     })

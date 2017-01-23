@@ -32,6 +32,7 @@ def parse_resource(res, path):
 
     res.path = path
     res.codec = FORMATS[type(media)]['pretty_name']
+    res.sample_rate = media.info.sample_rate
     res.bitrate = media.info.bitrate
 
     res.track.track_number = media.tags['tracknumber']
