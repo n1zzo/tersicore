@@ -34,7 +34,6 @@ class WatchdogHandler(PatternMatchingEventHandler):
                 r.path = event.dest_path
                 session.add(r)
 
-
     def on_deleted(self, event):
         with self.db.get_session() as session:
             self.db.remove_resource_by_path(session, event.src_path)
