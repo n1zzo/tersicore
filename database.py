@@ -90,6 +90,7 @@ class Database(object):
         try:
             yield session
         except Exception as e:
+            print(type(e))
             print(e)
             session.rollback()
         else:
