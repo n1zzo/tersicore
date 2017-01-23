@@ -120,6 +120,23 @@ class Database(object):
             .filter(~self.Resource.path.in_(paths))\
             .delete(synchronize_session=False)
 
+    def get_tracks(self, session, filters):
+        if filters is None:
+            q = session.query(self.Track)\
+                .join(self.Resource)\
+                .all()
+        else:
+            q = session.query(self.Track)\
+                .join(self.Resource)\
+                .filter(sql.or_(
+                    self.Track.title.like(filters['text']),
+                    self.Track.artist.like(filters['text']),
+                    self.Track.album.like(filters['text'])
+                    )
+                ).all()
+
+        return q
+
 
 if __name__ == '__main__':
     # TODO: real tests
