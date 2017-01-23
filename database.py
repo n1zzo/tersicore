@@ -19,6 +19,8 @@ class Database(object):
 
     class Resource(Base):
         __tablename__ = 'resources'
+        _tables_ = ['uuid', 'track_uuid', 'path', 'codec', 'sample_rate',
+                    'bitrate']
 
         uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
         track_uuid = sql.Column(sql.String(32), sql.ForeignKey(
@@ -31,10 +33,18 @@ class Database(object):
         bitrate = sql.Column(sql.Integer, nullable=False)
 
         def __repr__(self):
-            return str(self.__dict__)
+            return "<{}({})>"\
+                .format(self.__class__.__name__, ", ".join([
+                    "{}='{}'".format(k, v)
+                    for k, v in self.__dict__.items()
+                    if k in self._tables_
+                    ]))
 
     class Track(Base):
         __tablename__ = 'tracks'
+        _tables_ = ['uuid', 'track_number', 'total_tracks', 'disc_number',
+                    'total_discs', 'title', 'artist', 'album_artist',
+                    'album', 'compilation', 'date', 'label', 'isrc']
 
         uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
         track_number = sql.Column(sql.Integer)
@@ -62,7 +72,12 @@ class Database(object):
             )
 
         def __repr__(self):
-            return str(self.__dict__)
+            return "<{}({})>"\
+                .format(self.__class__.__name__, ", ".join([
+                    "{}='{}'".format(k, v)
+                    for k, v in self.__dict__.items()
+                    if k in self._tables_
+                    ]))
 
     def __init__(self):
         config = get_config()
