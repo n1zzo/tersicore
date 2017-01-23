@@ -17,9 +17,27 @@ class WatchdogHandler(PatternMatchingEventHandler):
         self.db = parent.db
         super().__init__(*args, **kwargs)
 
-    def on_any_event(self, event):
+    def on_created(self, event):
         with self.db.get_session() as session:
             self.db.update_resource_by_path(session, event.src_path)
+
+    def on_modified(self, event):
+        with self.db.get_session() as session:
+            self.db.update_resource_by_path(session, event.src_path)
+
+    def on_moved(self, event):
+        with self.db.get_session() as session:
+            r = self.db.get_resource_by_path(session, event.src_path)
+            if r is None:
+                self.db.update_resource_by_path(session, event.dest_path)
+            else:
+                r.path = event.dest_path
+                session.add(r)
+
+
+    def on_deleted(self, event):
+        with self.db.get_session() as session:
+            self.db.remove_resource_by_path(session, event.src_path)
 
 
 class MediaScanner:

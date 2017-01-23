@@ -97,18 +97,23 @@ class Database(object):
         finally:
             session.close()
 
+    def get_resource_by_path(self, session, path):
+        q = session.query(self.Resource)\
+            .filter(self.Resource.path == path).one_or_none()
+        return q
+
     def update_resource_by_path(self, session, path):
         res = self.get_resource_by_path(session, path)
         if res is None:
             res = self.Resource()
             res.track = self.Track()
-        session.add(res)
         parse_resource(res, path)
+        session.add(res)
 
-    def get_resource_by_path(self, session, path):
-        q = session.query(self.Resource)\
-            .filter(self.Resource.path == path).one_or_none()
-        return q
+    def remove_resource_by_path(self, session, path):
+        session.query(self.Resource)\
+            .filter(self.Resource.path == path)\
+            .delete(synchronize_session=False)
 
     def clean_resources(self, session, paths):
         session.query(self.Resource)\
