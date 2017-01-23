@@ -1,10 +1,11 @@
-from contextlib import contextmanager
-from uuid import uuid4
+from config import get_config
+from formats import parse_resource
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
 
-from config import get_config
+from uuid import uuid4
+from contextlib import contextmanager
 
 
 def new_uuid():
@@ -20,12 +21,13 @@ class Database(object):
         __tablename__ = 'resources'
 
         uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
-        track_uuid = sql.Column(sql.String(32), sql.ForeignKey('tracks.uuid'))
+        track_uuid = sql.Column(sql.String(32), sql.ForeignKey(
+            'tracks.uuid',
+            ondelete='CASCADE'
+            ))
         path = sql.Column(sql.String(1024))
         codec = sql.Column(sql.String(16))
         bitrate = sql.Column(sql.String(16))
-
-        track = sql.orm.relationship('Track', back_populates='resources')
 
         def __repr__(self):
             return str(self.__dict__)
@@ -47,7 +49,16 @@ class Database(object):
         label = sql.Column(sql.String(256))
         isrc = sql.Column(sql.String(256))
 
-        resources = sql.orm.relationship('Resource', back_populates='track')
+        resources = sql.orm.relationship(
+            'Resource',
+            passive_deletes=True,
+            backref=sql.orm.backref(
+                'track',
+                single_parent=True,
+                lazy='joined',
+                cascade='save-update,  merge, delete, delete-orphan'
+                )
+            )
 
         def __repr__(self):
             return str(self.__dict__)
@@ -85,6 +96,24 @@ class Database(object):
             session.commit()
         finally:
             session.close()
+
+    def update_resource_by_path(self, session, path):
+        res = self.get_resource_by_path(session, path)
+        if res is None:
+            res = self.Resource()
+            res.track = self.Track()
+        session.add(res)
+        parse_resource(res, path)
+
+    def get_resource_by_path(self, session, path):
+        q = session.query(self.Resource)\
+            .filter(self.Resource.path == path).one_or_none()
+        return q
+
+    def clean_resources(self, session, paths):
+        session.query(self.Resource)\
+            .filter(~self.Resource.path.in_(paths))\
+            .delete(synchronize_session=False)
 
 
 if __name__ == '__main__':
