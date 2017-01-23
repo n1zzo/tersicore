@@ -4,6 +4,7 @@ from fnmatch import fnmatch
 import mutagen
 import mutagen.id3
 import mutagen.oggvorbis
+import mutagen.flac
 
 
 FORMATS = {
@@ -14,6 +15,10 @@ FORMATS = {
     mutagen.oggvorbis.OggVorbis: {
         'pretty_name': 'ogg_vorbis',
         'extensions': ['ogg', 'oga']
+        },
+    mutagen.flac.FLAC: {
+        'pretty_name': 'FLAC',
+        'extensions': ['flac']
         }
     }
 
