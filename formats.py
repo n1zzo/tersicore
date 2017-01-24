@@ -40,23 +40,21 @@ def parse_resource(res, path):
     res.sample_rate = media.info.sample_rate
     res.bitrate = media.info.bitrate
 
-    res.track.track_number = media.tags['tracknumber']
-    res.track.total_tracks = media.tags['totaltracks']
-    res.track.disc_number = media.tags['discnumber']
-    res.track.total_discs = media.tags['totaldiscs']
+    res.track.track_number = media.tags.get('tracknumber', None)
+    res.track.total_tracks = media.tags.get('totaltracks', None)
+    res.track.disc_number = media.tags.get('discnumber', None)
+    res.track.total_discs = media.tags.get('totaldiscs', None)
     res.track.label = media.tags.get('organization', None)
-    res.track.title = media.tags['title']
-    res.track.artist = media.tags['artist']
-    res.track.album = media.tags['album']
+    res.track.title = media.tags.get('title', None)
+    res.track.artist = media.tags.get('artist', None)
+    res.track.album = media.tags.get('album', None)
     res.track.compilation = False
-    res.track.date = date(int(media.tags['date'][0]), 1, 1)
-    res.track.isrc = media.tags['isrc']
+    res.track.date = date(int(media.tags.get('date', None)[0]), 1, 1)
+    res.track.isrc = media.tags.get('isrc', None)
 
     if res.codec == 'mp3':
-        res.track.album_artist = media.tags['albumartist']
+        res.track.album_artist = media.tags.get('albumartist', None)
     elif res.codec == 'ogg_vorbis':
-        res.track.album_artist = media.tags['ensemble']
+        res.track.album_artist = media.tags.get('ensemble', None)
     elif res.codec == 'flac':
-        res.track.album_artist = media.tags['albumartist']
-
-       
+        res.track.album_artist = media.tags.get('albumartist', None)
