@@ -40,30 +40,26 @@ def test_database():
         session.add(track1)
         session.add(track2)
         print("We just added:")
-        print()
         print(track1, track2)
-        print()
-        print()
 
     with db.get_session() as session:
         session.add(track1)
         track1.title = 'Mr Happy'
         print("We just updated:")
-        print()
         print(track1)
-        print()
-        print()
 
     with db.get_session() as session:
         session.add(track1)
         session.add(track2)
+        print("We just updated:")
         track1.resources = [
             db.Resource(
                 codec='ogg',
                 bitrate='320',
                 sample_rate='44100',
                 path='/music/track1.ogg'),
-            db.Resource(codec='mp3',
+            db.Resource(
+                codec='mp3',
                 bitrate='192',
                 sample_rate='44100',
                 path='/music/track1.mp3')
@@ -74,20 +70,16 @@ def test_database():
                 bitrate='320',
                 sample_rate='44100',
                 path='/music/track2.ogg'),
-            db.Resource(codec='mp3',
+            db.Resource(
+                codec='mp3',
                 bitrate='192',
                 sample_rate='44100',
                 path='/music/track2.mp3')
              ]
         print("We just added the following resources:")
-        print()
         print(track1.resources, track2.resources)
-        print()
-        print()
 
     with db.get_session() as session:
-        print("Query:")
-        print()
         q = session.query(db.Track, db.Resource).join(db.Resource).all()
         print(q)
 
