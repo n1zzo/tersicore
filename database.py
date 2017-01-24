@@ -12,15 +12,16 @@ def new_uuid():
     return uuid4().hex
 
 
-class Database(object):
+class Database:
     Base = sqlalchemy.ext.declarative.declarative_base()
     Session = None
     engine = None
 
     class Resource(Base):
         __tablename__ = 'resources'
-        _tables_ = ['uuid', 'track_uuid', 'path', 'codec', 'sample_rate',
-                    'bitrate']
+        _tables = [
+            'uuid', 'track_uuid', 'path', 'codec', 'sample_rate', 'bitrate'
+            ]
 
         uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
         track_uuid = sql.Column(sql.String(32), sql.ForeignKey(
@@ -36,15 +37,22 @@ class Database(object):
             return "<{}({})>"\
                 .format(self.__class__.__name__, ", ".join([
                     "{}='{}'".format(k, v)
-                    for k, v in self.__dict__.items()
-                    if k in self._tables_
+                    for k, v in self.dict().items()
                     ]))
+
+        def dict(self):
+            return {
+                k: str(v)
+                for k, v in self.__dict__.items()
+                if k in self._tables
+                }
 
     class Track(Base):
         __tablename__ = 'tracks'
-        _tables_ = ['uuid', 'track_number', 'total_tracks', 'disc_number',
-                    'total_discs', 'title', 'artist', 'album_artist',
-                    'album', 'compilation', 'date', 'label', 'isrc']
+        _tables = ['uuid', 'track_number', 'total_tracks', 'disc_number',
+                   'total_discs', 'title', 'artist', 'album_artist',
+                   'album', 'compilation', 'date', 'label', 'isrc'
+                   ]
 
         uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
         track_number = sql.Column(sql.Integer)
@@ -75,9 +83,15 @@ class Database(object):
             return "<{}({})>"\
                 .format(self.__class__.__name__, ", ".join([
                     "{}='{}'".format(k, v)
-                    for k, v in self.__dict__.items()
-                    if k in self._tables_
+                    for k, v in self.dict().items()
                     ]))
+
+        def dict(self):
+            return {
+                k: str(v)
+                for k, v in self.__dict__.items()
+                if k in self._tables
+                }
 
     def __init__(self):
         config = get_config()

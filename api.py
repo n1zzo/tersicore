@@ -13,28 +13,12 @@ class TracksRequest(object):
         with self.db.get_session() as session:
             tracks = self.db.get_tracks(session, None)
             for track in tracks:
-                reply.append({
-                    'uuid': track.uuid,
-                    'track_number': track.track_number,
-                    'total_tracks': track.total_tracks,
-                    'disc_number': track.disc_number,
-                    'total_discs': track.total_discs,
-                    'title': track.title,
-                    'artist': track.artist,
-                    'album': track.album,
-                    'album_artist': track.album_artist,
-                    'compilation': track.compilation,
-                    'date': str(track.date),
-                    'label': track.label,
-                    'isrc': track.isrc,
-                    'resources': [{
-                        'path': resource.path,
-                        'codec': resource.codec,
-                        'sample_rate': resource.sample_rate,
-                        'bitrate': resource.bitrate
-                        } for resource in track.resources]
+                track_dict = track.dict()
+                track_dict.update({
+                    'resources': res.dict()
+                    for res in track.resources
                     })
-
+                reply.append(track_dict)
         resp.body = json.dumps(reply, indent=4, sort_keys=True)
 
 
