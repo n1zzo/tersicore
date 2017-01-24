@@ -17,7 +17,7 @@ FORMATS = {
         'extensions': ['ogg', 'oga']
         },
     mutagen.flac.FLAC: {
-        'pretty_name': 'FLAC',
+        'pretty_name': 'flac',
         'extensions': ['flac']
         }
     }
@@ -44,11 +44,19 @@ def parse_resource(res, path):
     res.track.total_tracks = media.tags['totaltracks']
     res.track.disc_number = media.tags['discnumber']
     res.track.total_discs = media.tags['totaldiscs']
+    res.track.label = media.tags.get('organization', None)
     res.track.title = media.tags['title']
     res.track.artist = media.tags['artist']
-    res.track.album_artist = media.tags['ensemble']
     res.track.album = media.tags['album']
     res.track.compilation = False
     res.track.date = date(int(media.tags['date'][0]), 1, 1)
-    res.track.label = media.tags['organization']
     res.track.isrc = media.tags['isrc']
+
+    if res.codec == 'mp3':
+        res.track.album_artist = media.tags['albumartist']
+    elif res.codec == 'ogg_vorbis':
+        res.track.album_artist = media.tags['ensemble']
+    elif res.codec == 'flac':
+        res.track.album_artist = media.tags['albumartist']
+
+       
