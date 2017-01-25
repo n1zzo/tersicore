@@ -32,6 +32,13 @@ def glob_match(path, globs):
     return any(fnmatch(path, glob) for glob in globs)
 
 
+def parse(field_name, dictionary):
+    value = dictionary.get(field_name, None)
+    if value is not None:
+        return value[0]
+    return value
+
+
 def parse_resource(res, path):
     media = mutagen.File(path)
 
@@ -40,21 +47,21 @@ def parse_resource(res, path):
     res.sample_rate = media.info.sample_rate
     res.bitrate = media.info.bitrate
 
-    res.track.track_number = media.tags.get('tracknumber', None)[0]
-    res.track.total_tracks = media.tags.get('totaltracks', None)[0]
-    res.track.disc_number = media.tags.get('discnumber', None)[0]
-    res.track.total_discs = media.tags.get('totaldiscs', None)[0]
-    res.track.label = media.tags.get('organization', None)[0]
-    res.track.title = media.tags.get('title', None)[0]
-    res.track.artist = media.tags.get('artist', None)[0]
-    res.track.album = media.tags.get('album', None)[0]
+    res.track.track_number = parse('tracknumber', media.tags)
+    res.track.total_tracks = parse('totaltracks', media.tags)
+    res.track.disc_number = parse('discnumber', media.tags)
+    res.track.total_discs = parse('totaldiscs', media.tags)
+    res.track.label = parse('organization', media.tags)
+    res.track.title = parse('title', media.tags)
+    res.track.artist = parse('artist', media.tags)
+    res.track.album = parse('album', media.tags)
     res.track.compilation = False
-    res.track.date = date(int(media.tags.get('date', None)[0]), 1, 1)
-    res.track.isrc = media.tags.get('isrc', None)[0]
+    res.track.date = date(int(parse('date', media.tags)), 1, 1)
+    res.track.isrc = parse('isrc', media.tags)
 
     if res.codec == 'mp3':
-        res.track.album_artist = media.tags.get('albumartist', None)[0]
+        res.track.album_artist = parse('albumartist', media.tags)
     elif res.codec == 'ogg_vorbis':
-        res.track.album_artist = media.tags.get('ensemble', None)[0]
+        res.track.album_artist = parse('ensemble', media.tags)
     elif res.codec == 'flac':
-        res.track.album_artist = media.tags.get('albumartist', None)[0]
+        res.track.album_artist = parse('albumartist', media.tags)
