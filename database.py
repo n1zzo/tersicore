@@ -75,7 +75,7 @@ class Database:
                 'track',
                 single_parent=True,
                 lazy='joined',
-                cascade='save-update,  merge, delete, delete-orphan'
+                cascade='save-update, merge, delete, delete-orphan'
                 )
             )
 
@@ -128,9 +128,17 @@ class Database:
         finally:
             session.close()
 
+    def get_track_by_uuid(self, session, uuid):
+        q = session.query(self.Track)\
+            .join(self.Resource)\
+            .filter(self.Track.uuid == uuid)\
+            .one_or_none()
+        return q
+
     def get_resource_by_path(self, session, path):
         q = session.query(self.Resource)\
-            .filter(self.Resource.path == path).one_or_none()
+            .filter(self.Resource.path == path)\
+            .one_or_none()
         return q
 
     def update_resource_by_path(self, session, path):
@@ -140,6 +148,11 @@ class Database:
             res.track = self.Track()
         parse_resource(res, path)
         session.add(res)
+
+    def remove_track_by_uuid(self, session, uuid):
+        session.query(self.Track)\
+            .filter(self.Track.uuid == uuid)\
+            .delete(synchronize_session=False)
 
     def remove_resource_by_path(self, session, path):
         session.query(self.Resource)\
@@ -165,11 +178,4 @@ class Database:
                     self.Track.album.like(filters['text'])
                     )
                 ).all()
-
         return q
-
-
-if __name__ == '__main__':
-    # TODO: real tests
-    from test import test_database
-    test_database()
