@@ -14,7 +14,25 @@ def new_uuid():
     return uuid4().hex
 
 
-class Resource(Base):
+class Entry:
+    _tables = []
+
+    def __repr__(self):
+        return "<{}({})>"\
+            .format(self.__class__.__name__, ", ".join([
+                "{}='{}'".format(k, v)
+                for k, v in self.to_dict().items()
+                ]))
+
+    def to_dict(self):
+        return {
+            k: str(v)
+            for k, v in self.__dict__.items()
+            if k in self._tables
+            }
+
+
+class Resource(Base, Entry):
     __tablename__ = 'resources'
     _tables = [
         'uuid', 'track_uuid', 'path', 'codec', 'sample_rate', 'bitrate'
@@ -30,22 +48,8 @@ class Resource(Base):
     sample_rate = sql.Column(sql.Integer, nullable=False)
     bitrate = sql.Column(sql.Integer, nullable=False)
 
-    def __repr__(self):
-        return "<{}({})>"\
-            .format(self.__class__.__name__, ", ".join([
-                "{}='{}'".format(k, v)
-                for k, v in self.dict().items()
-                ]))
 
-    def dict(self):
-        return {
-            k: str(v)
-            for k, v in self.__dict__.items()
-            if k in self._tables
-            }
-
-
-class Track(Base):
+class Track(Base, Entry):
     __tablename__ = 'tracks'
     _tables = ['uuid', 'track_number', 'total_tracks', 'disc_number',
                'total_discs', 'title', 'artist', 'album_artist',
@@ -76,20 +80,6 @@ class Track(Base):
             cascade='save-update, merge, delete, delete-orphan'
             )
         )
-
-    def __repr__(self):
-        return "<{}({})>"\
-            .format(self.__class__.__name__, ", ".join([
-                "{}='{}'".format(k, v)
-                for k, v in self.dict().items()
-                ]))
-
-    def dict(self):
-        return {
-            k: str(v)
-            for k, v in self.__dict__.items()
-            if k in self._tables
-            }
 
 
 class Database:
