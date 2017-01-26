@@ -1,4 +1,4 @@
-from database import Database
+from database import Database, Track, Resource
 
 from datetime import date
 from uuid import uuid4
@@ -7,7 +7,7 @@ from uuid import uuid4
 def test_insert(db):
     print("Testing database insert.")
     track_ = None
-    track = db.Track(
+    track = Track(
         track_number=1,
         total_tracks=2,
         disc_number=1,
@@ -21,12 +21,12 @@ def test_insert(db):
         label='Playaz Recordings',
         isrc='PLAYAZ002',
         resources=[
-            db.Resource(
+            Resource(
                 codec='ogg',
                 bitrate='320',
                 sample_rate='44100',
                 path=uuid4().hex),
-            db.Resource(
+            Resource(
                 codec='mp3',
                 bitrate='192',
                 sample_rate='44100',
