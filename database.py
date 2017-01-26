@@ -148,9 +148,8 @@ class Database:
             .delete(synchronize_session=False)
 
     def remove_resource_by_path(self, session, path):
-        session.query(Resource)\
-            .filter(Resource.path == path)\
-            .delete(synchronize_session=False)
+        res = self.get_resource_by_path(session, path)
+        session.delete(res)
 
     def clean_resources(self, session, paths):
         session.query(Resource)\
