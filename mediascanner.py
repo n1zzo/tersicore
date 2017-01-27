@@ -36,7 +36,8 @@ class WatchdogHandler(PatternMatchingEventHandler):
 
     def on_deleted(self, event):
         with self.db.get_session() as session:
-            self.db.remove_resource_by_path(session, event.src_path)
+            res = self.db.get_resource_by_path(session, event.src_path)
+            session.delete(res)
 
 
 class MediaScanner:

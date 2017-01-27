@@ -15,7 +15,7 @@ def new_uuid():
 
 
 class Entry:
-    _tables = []
+    _columns = []
 
     def __repr__(self):
         return "<{}({})>"\
@@ -28,13 +28,13 @@ class Entry:
         return {
             k: str(v)
             for k, v in self.__dict__.items()
-            if k in self._tables
+            if k in self._columns
             }
 
 
 class Resource(Base, Entry):
     __tablename__ = 'resources'
-    _tables = [
+    _columns = [
         'uuid', 'track_uuid', 'path', 'codec', 'sample_rate', 'bitrate'
         ]
 
@@ -51,10 +51,10 @@ class Resource(Base, Entry):
 
 class Track(Base, Entry):
     __tablename__ = 'tracks'
-    _tables = ['uuid', 'track_number', 'total_tracks', 'disc_number',
-               'total_discs', 'title', 'artist', 'album_artist',
-               'album', 'compilation', 'date', 'label', 'isrc'
-               ]
+    _columns = ['uuid', 'track_number', 'total_tracks', 'disc_number',
+                'total_discs', 'title', 'artist', 'album_artist',
+                'album', 'compilation', 'date', 'label', 'isrc'
+                ]
 
     uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
     track_number = sql.Column(sql.Integer)
@@ -121,17 +121,25 @@ class Database:
         finally:
             session.close()
 
-    def get_track_by_uuid(self, session, uuid):
-        q = session.query(Track)\
-            .join(Resource)\
-            .filter(Track.uuid == uuid)\
-            .one_or_none()
+    def get_track_by_uuid(self, session, uuid, join=False):
+        q = session.query(Track)
+        if join is True:
+            q = q.join(Resource)
+        q = q.filter(Track.uuid == uuid).one_or_none()
         return q
 
-    def get_resource_by_path(self, session, path):
-        q = session.query(Resource)\
-            .filter(Resource.path == path)\
-            .one_or_none()
+    def get_resource_by_uuid(self, session, uuid, join=False):
+        q = session.query(Resource)
+        if join is True:
+            q = q.join(Track)
+        q = q.filter(Resource.uuid == uuid).one_or_none()
+        return q
+
+    def get_resource_by_path(self, session, path, join=False):
+        q = session.query(Resource)
+        if join is True:
+            q = q.join(Track)
+        q = q.filter(Resource.path == path).one_or_none()
         return q
 
     def update_resource_by_path(self, session, path):
@@ -142,32 +150,9 @@ class Database:
         parse_resource(res, path)
         session.add(res)
 
-    def remove_track_by_uuid(self, session, uuid):
-        session.query(Track)\
-            .filter(Track.uuid == uuid)\
-            .delete(synchronize_session=False)
-
-    def remove_resource_by_path(self, session, path):
-        res = self.get_resource_by_path(session, path)
-        session.delete(res)
-
     def clean_resources(self, session, paths):
-        session.query(Resource)\
-            .filter(~Resource.path.in_(paths))\
-            .delete(synchronize_session=False)
-
-    def get_tracks(self, session, filters):
-        if filters is None:
-            q = session.query(Track)\
-                .join(Resource)\
+        res = session.query(Resource)\
+                .filter(~Resource.path.in_(paths))\
                 .all()
-        else:
-            q = session.query(Track)\
-                .join(Resource)\
-                .filter(sql.or_(
-                    Track.title.like(filters['text']),
-                    Track.artist.like(filters['text']),
-                    Track.album.like(filters['text'])
-                    )
-                ).all()
-        return q
+        for r in res:
+            session.delete(r)
