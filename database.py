@@ -121,6 +121,28 @@ class Database:
         finally:
             session.close()
 
+    def get_tracks(self, session, join=False, one=False, **kwargs):
+        q = session.query(Track)
+        filters_or = [
+            getattr(Track, c).like("%{}%".format())
+            for c in Track._columns
+            if 'text' in kwargs
+            ]
+        filters_and = [
+            getattr(Track, k).like("%{}%".format(v))
+            for k, v in kwargs.items()
+            if k in Track._columns
+            ]
+        if join is True:
+            q = q.join(Resource)
+        q = q.filter(sql.or_(*filters_or))
+        q = q.filter(sql.and_(*filters_and))
+        if one is True:
+            q = q.one_or_none()
+        else:
+            q = q.all()
+        return q
+
     def get_track_by_uuid(self, session, uuid, join=False):
         q = session.query(Track)
         if join is True:

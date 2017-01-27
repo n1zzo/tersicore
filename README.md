@@ -43,6 +43,26 @@ Track you'll remove the latter automatically too.
         # ...OR...
         session.delete(track.resources[0], track.resources[1])
 
+If you need to search a row using an indexed column (uuid for Track, uuid and
+path for Resource) you should use `get_track_by_uuid()`,
+`get_resource_by_uuid()`, `get_resource_by_path()`. If you pass the `join=True`
+argument, found Track objects will have their `resources` attributed populated
+and Resource objects their `track` attribute.
+
+    with db.get_session() as session:
+        res = db.get_track_by_path(session, '/tmp/test.ogg', joined=True)
+        track = res.track
+        session.delete(track)
+
+If you need a fulltext search with filters you should use `get_tracks()`
+instead. If you are looking for a single object pass `one=True`: the function
+will either return a single Track object or None if the query returns zero or
+more than one elements.
+
+    with db.get_session() as session:
+        tracks = db.get_tracks(session,
+            text='the cooler', artist='black sun empire')
+
 ### Tables
 
 #### resources
