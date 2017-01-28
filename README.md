@@ -12,17 +12,19 @@ automatically load its configuration from the `config.ini` file.
 
 Database operations must be grouped in transactions. If any operation fails the
 whole transaction will be aborted and the database will remain unchanged. The
-session is the context of the transaction and must be asked for to the Database
+session is the context of the transaction and must be obtained from the Database
 object.
 
     with db.get_session() as session:
         # database operations here
 
-If you need to add a new Track or a Resource to the database you need to create
-a new Track/Resource object that can be found in the `database.py`. The session
-will try to add the object to the database and from now the object and its entry
-in the database will be kept in sync as long as the session is open. The new
-Track or Resouce will get a new uuid only once it gets its way to the Database.
+If you need to add a new Track or a Resource to the database you have to create
+a new instance of the Track/Resource object, they can be found in `database.py`.
+The session's add method will try to add the object to the database.
+From now on the object and its entry in the database will be kept in sync as
+long as the session will remain open.
+The new Track or Resource will get a new uuid only once it gets its
+way to the Database.
 
     from database import Track, Resource
     
@@ -34,8 +36,8 @@ Track or Resouce will get a new uuid only once it gets its way to the Database.
         session.add(track)
 
 If you need to remove the row linked to an existing object all you need is the
-`session.delete()` method. If you delete a Track object you'll remove each of
-its Resource objects automatically. If you delete each Resource object for a
+`session.delete()` method. If you delete a Track object you'll remove all of
+its Resource objects automatically. If you delete every Resource object for a
 Track you'll remove the latter automatically too.
 
     with db.get_session() as session:
@@ -50,7 +52,7 @@ argument, found Track objects will have their `resources` attributed populated
 and Resource objects their `track` attribute.
 
     with db.get_session() as session:
-        res = db.get_track_by_path(session, '/tmp/test.ogg', joined=True)
+        res = db.get_track_by_path(session, '/tmp/test.ogg', join=True)
         track = res.track
         session.delete(track)
 
