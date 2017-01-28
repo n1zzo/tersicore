@@ -124,8 +124,9 @@ class Database:
     def get_tracks(self, session, join=False, one=False, **kwargs):
         q = session.query(Track)
         filters_or = [
-            getattr(Track, c).like("%{}%".format())
+            getattr(Track, c).like("%{}%".format(kwargs['text']))
             for c in Track._columns
+            if type(getattr(Track, c)) is str
             if 'text' in kwargs
             ]
         filters_and = [

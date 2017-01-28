@@ -45,6 +45,18 @@ def test_insert(db):
         print("Result:", track_, track_resources)
 
     with db.get_session() as session:
+        print("Query for: {title='happy', artist='hazard'}")
+        tracks = db.get_tracks(session, title='happy', artist='hazard')
+        for t in tracks:
+            print(t)
+
+    with db.get_session() as session:
+        print("Query for: {text='happy', artist='hazard'}")
+        tracks = db.get_tracks(session, text='happy', artist='hazard')
+        for t in tracks:
+            print(t)
+
+    with db.get_session() as session:
         print("Removing.")
         session.delete(track_)
 
