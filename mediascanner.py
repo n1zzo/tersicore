@@ -22,14 +22,20 @@ class WatchdogHandler(PatternMatchingEventHandler):
         super().__init__(*args, **kwargs)
 
     def on_created(self, event):
+        log.debug("Created file (%s) %s",
+                  event.event_type, event.src_path)
         with self.db.get_session() as session:
             self.db.update_resource_by_path(session, event.src_path)
 
     def on_modified(self, event):
+        log.debug("Modified file (%s) %s",
+                  event.event_type, event.src_path)
         with self.db.get_session() as session:
             self.db.update_resource_by_path(session, event.src_path)
 
     def on_moved(self, event):
+        log.debug("Moved file (%s) %s -> %s",
+                  event.event_type, event.src_path, event.dest_path)
         with self.db.get_session() as session:
             r = self.db.get_resource_by_path(session, event.src_path)
             if r is None:
@@ -39,6 +45,8 @@ class WatchdogHandler(PatternMatchingEventHandler):
                 session.add(r)
 
     def on_deleted(self, event):
+        log.debug("Deleted file (%s) %s",
+                  event.event_type, event.src_path)
         with self.db.get_session() as session:
             res = self.db.get_resource_by_path(session, event.src_path)
             session.delete(res)
