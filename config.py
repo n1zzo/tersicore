@@ -1,7 +1,17 @@
 from configparser import ConfigParser
 import os.path
 
-DEFAULT_PATHS = 'config.ini', '/etc/musiclibrary/config.ini'
+
+CONFIG_FILES = ['config.ini', 'logging.conf']
+DEFAULT_PATHS = ['/etc/tersicore/', '/usr/local/etc/tersicore/', 'conf/']
+
+
+def get_config_path():
+    for p in DEFAULT_PATHS:
+        if all([os.path.isfile(os.path.join(p, f)) for f in CONFIG_FILES]):
+            return p
+    else:
+        raise Exception('Unable to find a configuration folder.')
 
 
 def get_config(path=None):
@@ -10,16 +20,7 @@ def get_config(path=None):
     if path:
         config.read(path)
     else:
-        for path in DEFAULT_PATHS:
-            if os.path.isfile(path):
-                config.read(path)
-                break
-        else:  # no break
-            print("Config not found")  # TODO: logger
-            # raise an exception?
+        path = get_config_path()
+        f = os.path.join(path, 'config.ini')
+        config.read(f)
     return config
-
-
-# test
-if __name__ == "__main__":
-    print(dict(get_config()))

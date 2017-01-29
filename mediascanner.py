@@ -1,4 +1,5 @@
 from config import get_config
+from log import get_logger
 from database import Database
 
 from formats import FORMATS_GLOB
@@ -9,6 +10,9 @@ from time import sleep
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
+
+
+log = get_logger('mediascanner')
 
 
 class WatchdogHandler(PatternMatchingEventHandler):

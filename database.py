@@ -1,4 +1,5 @@
 from config import get_config
+from log import get_logger
 from formats import parse_resource
 
 import sqlalchemy as sql
@@ -7,6 +8,7 @@ import sqlalchemy.ext.declarative
 from uuid import uuid4
 from contextlib import contextmanager
 
+log = get_logger('database')
 Base = sqlalchemy.ext.declarative.declarative_base()
 
 
@@ -95,10 +97,7 @@ class Database:
         else:
             eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}'\
                       .format(**config_db)
-        self.engine = sql.create_engine(
-            eng_str,
-            echo=config.getboolean('GENERAL', 'Debug')
-            )
+        self.engine = sql.create_engine(eng_str)
 
         Base.metadata.create_all(self.engine)
 

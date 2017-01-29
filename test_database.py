@@ -1,11 +1,15 @@
+from log import get_logger
 from database import Database, Track, Resource
 
 from datetime import date
 from uuid import uuid4
 
 
+log = get_logger('test.database')
+
+
 def test_insert(db):
-    print("Testing database.")
+    log.info("Starting database tests.")
     track_ = None
     track = Track(
         track_number=1,
@@ -35,42 +39,44 @@ def test_insert(db):
          )
 
     with db.get_session() as session:
-        print("Adding:", track)
+        log.debug("Adding a new Track object to the session: %s", track)
         session.add(track)
 
+    log.debug("Track object status after insert: %s", track)
+
     with db.get_session() as session:
-        print("Query for uuid:", track.uuid)
+        log.debug("Query for uuid: %s", track.uuid)
         track_ = db.get_track_by_uuid(session, track.uuid)
         track_resources = track.resources
-        print("Result:", track_, track_resources)
+        log.debug("Result: %s %s", track_, track_resources)
 
     with db.get_session() as session:
-        print("Query for: {title='happy', artist='hazard'}")
+        log.debug("Query for: {title='happy', artist='hazard'}")
         tracks = db.get_tracks(session, title='happy', artist='hazard')
-        for t in tracks:
-            print(t)
+        log.debug("Results: %s", str([t for t in tracks]))
 
     with db.get_session() as session:
-        print("Query for: {text='happy', artist='hazard'}")
+        log.debug("Query for: {text='happy', artist='hazard'}")
         tracks = db.get_tracks(session, text='happy', artist='hazard')
-        for t in tracks:
-            print(t)
+        log.debug("Results: %s", str([t for t in tracks]))
 
     with db.get_session() as session:
-        print("Removing.")
+        log.debug("Removing: %s", track_)
         session.delete(track_)
 
     with db.get_session() as session:
-        print("Checking...")
+        log.debug("Running checks...")
         track_ = db.get_track_by_uuid(session, track.uuid)
         if track_ is None:
-            print("Track removed")
+            log.debug("Track with uuid %s removed", track.uuid)
         else:
-            print("Track NOT removed")
+            log.debug("Track with uuid %s NOT removed", track.uuid)
         for res in track.resources:
             res_ = db.get_resource_by_uuid(session, res.uuid)
             if res_ is None:
-                print("Resource removed")
+                log.debug("Resource with uuid %s removed", res.uuid)
+            else:
+                log.debug("Resource with uuid %s NOT removed", res.uuid)
 
     track_ = None
     track = Track(
@@ -101,27 +107,29 @@ def test_insert(db):
          )
 
     with db.get_session() as session:
-        print("Adding:", track)
+        log.debug("Adding a new Track object to the session: %s", track)
         session.add(track)
 
     with db.get_session() as session:
         res1 = track.resources[0]
         res2 = track.resources[1]
-        print("Removing resources:", res1, res2)
+        log.debug("Removing resources: %s %s", res1, res2)
         session.delete(res1)
         session.delete(res2)
 
     with db.get_session() as session:
-        print("Checking...")
+        log.debug("Running checks...")
         track_ = db.get_track_by_uuid(session, track.uuid)
         if track_ is None:
-            print("Track removed")
+            log.debug("Track with uuid %s removed", track.uuid)
         else:
-            print("Track NOT removed")
+            log.debug("Track with uuid %s NOT removed", track.uuid)
         for res in track.resources:
             res_ = db.get_resource_by_path(session, res.path)
             if res_ is None:
-                print("Resource removed")
+                log.debug("Resource with uuid %s removed", res.uuid)
+            else:
+                log.debug("Resource with uuid %s NOT removed", res.uuid)
 
 
 if __name__ == '__main__':
