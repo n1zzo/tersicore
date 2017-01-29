@@ -4,9 +4,11 @@ app = Flask(__name__)
 
 db = None
 
+
 @app.route("/")
 def greet():
     return "MusicLibrary - Tersicore"
+
 
 @app.route('/tracks', methods=['GET'])
 def get_tracks():
