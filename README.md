@@ -1,14 +1,34 @@
 # MusicLibrary
 
+## Configuration
+
+There are two configuration files: config.ini specifies how this software should
+behave and logging.conf specify how lossing should work. In the docs/conf
+directory you can find some examples. Further logging documentation can be found
+[here][python-logging-config-dictschema].
+
+You should initialize the Config object once. You can optionally specify a
+config directory and override default file names.
+
+    from tersicore.config import Config
+    config = Config('/var/tersicore', 'tersicore.conf', 'log.conf')
+
+Tersicore and logging configurations are shown to the user as dictionaries.
+
+    conf_tersicore = config.tersicore
+    conf_logging = config.logging
+    
+    conf_db = conf_tersicore['DATABASE']
+
 ## Database
 
 ### Workflow
 
-If your module needs database access you have to initialize it once. It will
-automatically load its configuration from the `config.ini` file.
+If your module needs database access you have to initialize it once.
+tersicore.
 
-    from database import Database
-    db = Database()
+    from tersicore.database import Database
+    db = Database(driver='sqlite', path='test.db')
 
 Database operations must be grouped in transactions. If any operation fails the
 whole transaction will be aborted and the database will remain unchanged. The
@@ -26,7 +46,7 @@ long as the session will remain open.
 The new Track or Resource will get a new uuid only once it gets its
 way to the Database.
 
-    from database import Track, Resource
+    from tersicore.database import Track, Resource
     
     with db.get_session() as session:
         track = Track(title='some data' ...)
@@ -94,3 +114,6 @@ more than one elements.
 | date            | VARCHAR[256]    |      |     | NULL    |                |
 | label           | VARCHAR[256]    |      |     | NULL    |                |
 | ISRC            | VARCHAR[256]    |      |     | NULL    |                |
+
+
+[python-logging-config-dictschema]: https://docs.python.org/3/library/logging.config.html#logging-config-dictschema

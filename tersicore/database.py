@@ -1,14 +1,11 @@
-from config import get_config
-from log import get_logger
-from formats import parse_resource
+from contextlib import contextmanager
+from uuid import uuid4
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
 
-from uuid import uuid4
-from contextlib import contextmanager
+from tersicore.formats import parse_resource
 
-log = get_logger('database')
 Base = sqlalchemy.ext.declarative.declarative_base()
 
 
@@ -88,15 +85,13 @@ class Database:
     Session = None
     engine = None
 
-    def __init__(self):
-        config = get_config()
-        config_db = config['DATABASE']
+    def __init__(self, **kwargs):
 
-        if config_db['Driver'] == 'sqlite':
-            eng_str = '{driver}:///{path}'.format(**config_db)
+        if kwargs['driver'] == 'sqlite':
+            eng_str = '{driver}:///{path}'.format(**kwargs)
         else:
             eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}'\
-                      .format(**config_db)
+                      .format(**kwargs)
         self.engine = sql.create_engine(eng_str)
 
         Base.metadata.create_all(self.engine)
