@@ -2,3 +2,4 @@ sqlalchemy
 pymysql
 watchdog
 mutagen
+flask
