@@ -20,9 +20,8 @@ def main():
         tersicore_file=args.tersicore_config,
         logging_file=args.logging_config)
 
-    logging_config = config.logging
-
-    init_logging(logging_config)
+    config_logging = config.logging
+    init_logging(config_logging)
 
     config_database = config.tersicore['DATABASE']
     database = Database(**config_database)

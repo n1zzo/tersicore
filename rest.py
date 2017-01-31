@@ -1,8 +1,19 @@
 from flask import Flask, jsonify
-from database import Database
-app = Flask(__name__)
 
-db = None
+from tersicore.config import Config
+from tersicore.log import init_logging, get_logger
+from tersicore.database import Database
+
+config = Config()
+
+config_logging = config.logging
+init_logging(config_logging)
+log = get_logger('rest')
+
+config_database = config.tersicore['DATABASE']
+db = Database(**config_database)
+
+app = Flask(__name__)
 
 
 @app.route("/")
@@ -19,5 +30,4 @@ def get_tracks():
 
 
 if __name__ == "__main__":
-    db = Database()
     app.run(host='0.0.0.0', debug=True)
