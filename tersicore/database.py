@@ -20,16 +20,8 @@ class Entry:
         return "<{}({})>"\
             .format(self.__class__.__name__, ", ".join([
                 "{}='{}'".format(k, v)
-                for k, v in self.to_dict().items()
+                for k, v in self.__dict__.items()
                 ]))
-
-    def to_dict(self):
-        return {
-            k: str(v)
-            for k, v in self.__dict__.items()
-            if k in self._columns
-            }
-
 
 class Resource(Base, Entry):
     __tablename__ = 'resources'

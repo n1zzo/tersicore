@@ -25,7 +25,11 @@ def greet():
 def get_tracks():
     with db.get_session() as session:
         tracks = db.get_tracks(session, join=True)
-        tracks_dict = [t.to_dict() for t in tracks]
+        tracks_dict = [t.__dict__ for t in tracks]
+        print(tracks_dict[0])
+        for track in tracks_dict:
+            track.pop('_sa_instance_state', None)
+            #track['resources'] = track['resources'].__dict__
         return jsonify(tracks_dict)
 
 
