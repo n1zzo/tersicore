@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from uuid import uuid4
+from datetime import date
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
@@ -14,20 +15,39 @@ def new_uuid():
 
 
 class Entry:
-    _columns = []
-
     def __repr__(self):
         return "<{}({})>"\
             .format(self.__class__.__name__, ", ".join([
                 "{}='{}'".format(k, v)
-                for k, v in self.__dict__.items()
+                for k, v in self.dict()
                 ]))
+
+    def dict(self):
+        d = {}
+        # Step #1
+        # Build the new dictionary with strings, integers and dates taken from
+        # self class attributes.
+        for k, v in self.__dict__.items():
+            if isinstance(v, (str, int, date)):
+                d[k] = v
+        # Step #2
+        # Since, for example, Track has no explicit resources attribute because
+        # it is backreferenced from Resource we need a little workaround to
+        # make sure all relationships are caught.
+        # __mapper__.relationships is a list of tuple where the first element
+        # of the tuple is the name of the relationship.
+        relationships = self.__mapper__.relationships.keys()
+        for r in relationships:
+            rel = getattr(self, r)
+            # If the relationship points to multiple rows we run .dict() again
+            # for each element and add this new list to the dictionary
+            if isinstance(rel, list):
+                d[r] = [e.dict() for e in rel]
+        return d
+
 
 class Resource(Base, Entry):
     __tablename__ = 'resources'
-    _columns = [
-        'uuid', 'track_uuid', 'path', 'codec', 'sample_rate', 'bitrate'
-        ]
 
     uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
     track_uuid = sql.Column(sql.String(32), sql.ForeignKey(
@@ -42,10 +62,6 @@ class Resource(Base, Entry):
 
 class Track(Base, Entry):
     __tablename__ = 'tracks'
-    _columns = ['uuid', 'track_number', 'total_tracks', 'disc_number',
-                'total_discs', 'title', 'artist', 'album_artist',
-                'album', 'compilation', 'date', 'label', 'isrc'
-                ]
 
     uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
     track_number = sql.Column(sql.Integer)
@@ -111,14 +127,19 @@ class Database:
         q = session.query(Track)
         filters_or = [
             getattr(Track, c).like("%{}%".format(kwargs['text']))
-            for c in Track._columns
+            for c in Track.__dict__
+            # TODO
+            # Here we are matching only for strings.
+            # We need a more solid logic.
             if type(getattr(Track, c)) is str
             if 'text' in kwargs
             ]
         filters_and = [
             getattr(Track, k).like("%{}%".format(v))
             for k, v in kwargs.items()
-            if k in Track._columns
+            # TODO
+            # Here we don't check if kwargs are in Track.dict() since it is not
+            # a static method. Can it be?
             ]
         if join is True:
             q = q.join(Resource)
