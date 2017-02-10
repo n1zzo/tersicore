@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, abort, make_response, Response
+from flask import Flask, jsonify, abort, make_response, send_file
+from io import BytesIO
 
 from tersicore.config import Config
 from tersicore.log import init_logging, get_logger
@@ -34,13 +35,13 @@ def get_tracks():
 def get_resource(res_uuid):
     with db.get_session() as session:
         res = db.get_resource_by_uuid(session, res_uuid)
-        res_dict = res.dict()
     if res is None:
         abort(404)
     path = res.path
-    res_file = open(path, 'r')
-    #return Response(res_file.read(), mimetype='media/flac')
-    return jsonify(res_dict)
+    res_file = open(path, 'rb')
+    mimetype = 'audio/{}'.format(res.codec)
+    return send_file(BytesIO(res_file.read()),
+                     mimetype=mimetype)
 
 
 @app.errorhandler(404)
