@@ -3,7 +3,7 @@
 ## Setup
 
 These are the instruction for deploying musicLibrary on an nginx environment.
-You will need python3, python3-pip, nginx and python3-virtualenv.
+You will need python3, python3-pip, nginx, uwsgi and python3-virtualenv.
 Clone latest project tree from master branch:
 
     git clone https://github.com/n1zzo/musicLibrary
@@ -14,14 +14,32 @@ Inside the cloned directory create a new python virtualenv, and activate it:
     virtualenv tersicore_venv
     source ./tersicore_venv/bin/activate
 
-Install the required dependencies:
+Install the required dependencies and exit virtualenv:
 
     pip install -r requirements.txt
-    pip install uwsgi
+    deactivate
+
+To bind tersicore at the URL root of nginx add this to nginx.conf:
+
+    location / { try_files $uri @tersicore;  }
+    location @tersicore {
+        include uwsgi_params;
+        uwsgi_pass unix:/tmp/tersicore.sock;
+    }
+
+To bind it at /tersicore use this configuration instead:
+
+    location = /tersicore { rewrite ^ /tersicore/;  }
+    location /tersicore { try_files $uri @tersicore;  }
+    location @tersicore {
+        include uwsgi_params;
+        uwsgi_pass unix:/tmp/tersicore.sock;
+    }
 
 After the configuration and database building, you can run musicLibrary with:
 
-    uwsgi --socket 0.0.0.0:8080 --protocol=http -w wsgi
+    uwsgi -s /tmp/tersicore.sock --manage-script-name  \
+          --mount /=rest:app --virtlenv ./tersicore_venv
 
 ## Configuration
 
