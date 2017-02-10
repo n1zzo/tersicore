@@ -3,12 +3,17 @@ from fnmatch import fnmatch
 
 import mutagen
 import mutagen.id3
+import mutagen.mp3
 import mutagen.oggvorbis
 import mutagen.flac
 
 
 FORMATS = {
     mutagen.id3.ID3FileType: {
+        'pretty_name': 'mp3',
+        'extensions': ['mp3']
+        },
+    mutagen.mp3.MP3: {
         'pretty_name': 'mp3',
         'extensions': ['mp3']
         },
@@ -56,8 +61,11 @@ def parse_resource(res, path):
     res.track.artist = parse('artist', media.tags)
     res.track.album = parse('album', media.tags)
     res.track.compilation = False
-    res.track.date = date(int(parse('date', media.tags)), 1, 1)
     res.track.isrc = parse('isrc', media.tags)
+
+    raw_date = parse('date', media.tags)
+    if raw_date is not None:
+        res.track.date = date(int(raw_date), 1, 1)
 
     if res.codec == 'mp3':
         res.track.album_artist = parse('albumartist', media.tags)
