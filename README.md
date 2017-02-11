@@ -36,10 +36,17 @@ To bind it at /tersicore use this configuration instead:
         uwsgi_pass unix:/tmp/tersicore.sock;
     }
 
+Set the nginx worker process user as the one you use to run uwsgi:
+
+    user user [group];
+
+As a last step copy uwsgi ini file from docs/conf folder:
+
+    cp docs/conf/uwsgi.ini conf/
+
 After the configuration and database building, you can run musicLibrary with:
 
-    uwsgi -s /tmp/tersicore.sock --manage-script-name  \
-          --mount /=rest:app --virtlenv ./tersicore_venv
+    uwsgi --ini conf/uwsgi.ini
 
 ## Configuration
 
