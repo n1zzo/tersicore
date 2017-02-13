@@ -38,9 +38,9 @@ def get_resource(res_uuid):
     if res is None:
         abort(404)
     path = res.path
-    res_file = open(path, 'rb')
-    mimetype = 'audio/{}'.format(res.codec)
-    return send_file(BytesIO(res_file.read()),
+    with open(path, 'rb') as res_file:
+        mimetype = 'audio/{}'.format(res.codec)
+        return send_file(BytesIO(res_file.read()),
                      mimetype=mimetype)
 
 
