@@ -33,20 +33,28 @@ def get_tracks():
 
 @app.route('/resources/<string:res_uuid>', methods=['GET'])
 def get_resource(res_uuid):
-    with db.get_session() as session:
-        res = db.get_resource_by_uuid(session, res_uuid)
-    if res is None:
-        abort(404)
-    path = res.path
-    with open(path, 'rb') as res_file:
-        mimetype = 'audio/{}'.format(res.codec)
-        return send_file(BytesIO(res_file.read()),
-                     mimetype=mimetype)
+    try:
+        with db.get_session() as session:
+            res = db.get_resource_by_uuid(session, res_uuid)
+        if res is None:
+            abort(404)
+        path = res.path
+        with open(path, 'rb') as res_file:
+            mimetype = 'audio/{}'.format(res.codec)
+            return send_file(BytesIO(res_file.read()),
+                         mimetype=mimetype)
+    except FileNotFoundError:
+        abort(500)
 
 
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not Found'}), 404)
+
+
+@app.errorhandler(500)
+def not_found(error):
+    return make_response(jsonify({'error': 'Internal Server Error'}), 500)
 
 
 if __name__ == "__main__":
