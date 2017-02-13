@@ -67,7 +67,7 @@ def parse_resource(res, path):
     res.track.isrc = parse('isrc', media.tags)
 
     raw_date = parse('date', media.tags)
-    if raw_date is not None:
+    if raw_date not in [None, '']:
         res.track.date = date(int(raw_date), 1, 1)
 
     if res.codec == 'mp3':
