@@ -54,7 +54,7 @@ class Resource(Base, Entry):
         'tracks.uuid',
         ondelete='CASCADE'
         ), nullable=False)
-    path = sql.Column(sql.String(1024), nullable=False, unique=True)
+    path = sql.Column(sql.String(1024), nullable=False)
     codec = sql.Column(sql.String(16), nullable=False)
     sample_rate = sql.Column(sql.Integer, nullable=False)
     bitrate = sql.Column(sql.Integer, nullable=False)
@@ -98,8 +98,8 @@ class Database:
         if kwargs['driver'] == 'sqlite':
             eng_str = '{driver}:///{path}'.format(**kwargs)
         else:
-            eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}'\
-                      .format(**kwargs)
+            eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}' \
+                      '?charset=utf8'.format(**kwargs)
         self.engine = sql.create_engine(eng_str)
 
         Base.metadata.create_all(self.engine)
