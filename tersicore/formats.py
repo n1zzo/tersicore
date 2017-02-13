@@ -52,6 +52,9 @@ def parse_resource(res, path):
     res.sample_rate = media.info.sample_rate
     res.bitrate = media.info.bitrate
 
+    if res.codec is 'mp3':
+        media.tags = mutagen.mp3.EasyMP3(path)
+
     res.track.track_number = parse('tracknumber', media.tags)
     res.track.total_tracks = parse('totaltracks', media.tags)
     res.track.disc_number = parse('discnumber', media.tags)
