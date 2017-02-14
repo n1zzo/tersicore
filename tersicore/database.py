@@ -4,6 +4,7 @@ from datetime import date
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
+from sqlalchemy.orm import subqueryload
 
 from tersicore.formats import parse_resource
 
@@ -125,6 +126,7 @@ class Database:
 
     def get_tracks(self, session, join=False, one=False, **kwargs):
         q = session.query(Track)
+        q = q.options(subqueryload(Track.resources))
         filters_or = [
             getattr(Track, c).like("%{}%".format(kwargs['text']))
             for c in Track.__dict__
