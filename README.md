@@ -42,11 +42,11 @@ Set the nginx worker process user as the one you use to run uwsgi:
 
 As a last step copy uwsgi ini file from docs/conf folder:
 
-    cp docs/conf/uwsgi.ini conf/
+    cp docs/uwsgi/tersicore_rest.ini conf/
 
 After the configuration and database building, you can run musicLibrary with:
 
-    uwsgi --ini conf/uwsgi.ini
+    uwsgi --ini conf/tersicore_rest.ini
 
 ## Configuration
 
