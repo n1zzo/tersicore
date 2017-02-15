@@ -14,9 +14,10 @@ from tersicore.log import get_logger
 
 # The database URL must follow RFC 1738 in the form
 # dialect+driver://username:password@host:port/database
-ENGINE_GENERIC = '{engine}://{user}:{password}@{host}:{port}/{database}'
-ENGINE_SQLITE = 'sqlite:///{path}'
-ENGINE_SQLITE_MEMORY = 'sqlite://'
+ENGINE_GENERIC = '{engine}://{user}:{password}@{host}:{port}/{database}'\
+                 '?charset=utf8'
+ENGINE_SQLITE = 'sqlite:///{path}?charset=utf8'
+ENGINE_SQLITE_MEMORY = 'sqlite://?charset=utf8'
 
 # TODO: implement date!
 COLUMN_TYPES = (int, str, bool)
