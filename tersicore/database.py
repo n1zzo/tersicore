@@ -1,18 +1,89 @@
+import os
 from contextlib import contextmanager
 from uuid import uuid4
-from datetime import date
 
-import sqlalchemy as sql
+import sqlalchemy as sa
 import sqlalchemy.ext.declarative
-from sqlalchemy.orm import subqueryload
+import sqlalchemy.ext.baked
+from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Integer, String, Date, Boolean
+from sqlalchemy.orm import relationship, backref, subqueryload
 
-from tersicore.formats import parse_resource
+from tersicore.log import get_logger
 
-Base = sqlalchemy.ext.declarative.declarative_base()
+
+# The database URL must follow RFC 1738 in the form
+# dialect+driver://username:password@host:port/database
+ENGINE_GENERIC = '{engine}://{user}:{password}@{host}:{port}/{database}'
+ENGINE_SQLITE = 'sqlite:///{path}'
+ENGINE_SQLITE_MEMORY = 'sqlite://'
+
+# TODO: implement date!
+COLUMN_TYPES = (int, str, bool)
 
 
 def new_uuid():
     return uuid4().hex
+
+
+Base = sqlalchemy.ext.declarative.declarative_base()
+bakery = sqlalchemy.ext.baked.bakery()
+log = get_logger('database')
+
+
+class Database:
+    """
+    Handle database operations."
+    """
+
+    Session = None
+    engine = None
+
+    def __init__(self, **kwargs):
+        """
+        Initialize database connection.
+
+        :param engine: The SQLAlchemy database backend in the form
+                       dialect+driver where dialect is the name of a SQLAlchemy
+                       dialect (sqlite, mysql, postgresql, oracle or mssql) and
+                       driver is the name of the DBAPI in all lowercase
+                       letters. If driver is not specified the default DBAPI
+                       will be imported if available.
+        :param path: Only for SQLite. Path to database. If not specified the
+                     database will be kept in memory (should be used only for
+                     testing).
+        :param host:
+        :param port:
+        :param database:
+        :param user:
+        :param password:
+        """
+
+        if kwargs['engine'] == 'sqlite':
+            if 'path' in kwargs:
+                url = ENGINE_SQLITE.format(path=os.sep+kwargs['path'])
+            else:
+                url = ENGINE_SQLITE_MEMORY
+        else:
+            url = ENGINE_GENERIC.format(**kwargs)
+
+        self.engine = sa.create_engine(url)
+        self.Session = sa.orm.sessionmaker(bind=self.engine)
+
+        Base.metadata.create_all(self.engine)
+
+    @contextmanager
+    def get_session(self):
+        session = self.Session()
+        try:
+            yield session
+        except Exception as e:
+            log.error('Error performing transaction: %s', e)
+            session.rollback()
+        else:
+            session.commit()
+        finally:
+            session.close()
 
 
 class Entry:
@@ -20,17 +91,24 @@ class Entry:
         return "<{}({})>"\
             .format(self.__class__.__name__, ", ".join([
                 "{}='{}'".format(k, v)
-                for k, v in self.dict()
+                for k, v in self.items()
                 ]))
 
-    def dict(self):
-        d = {}
+    def keys(self):
+        return [k
+                for k, v in self.__dict__.items()
+                if isinstance(v, COLUMN_TYPES)
+                ]
+
+    def items(self):
+        return {k: v
+                for k, v in self.__dict__.items()
+                if isinstance(v, COLUMN_TYPES)
+                }
+
+    def items_ext(self):
         # Step #1
-        # Build the new dictionary with strings, integers and dates taken from
-        # self class attributes.
-        for k, v in self.__dict__.items():
-            if isinstance(v, (str, int, date)):
-                d[k] = v
+        d = self.items()
         # Step #2
         # Since, for example, Track has no explicit resources attribute because
         # it is backreferenced from Resource we need a little workaround to
@@ -40,151 +118,57 @@ class Entry:
         relationships = self.__mapper__.relationships.keys()
         for r in relationships:
             rel = getattr(self, r)
-            # If the relationship points to multiple rows we run .dict() again
+            # If the relationship points to multiple rows we run .items() again
             # for each element and add this new list to the dictionary
             if isinstance(rel, list):
-                d[r] = [e.dict() for e in rel]
+                d[r] = [e.items() for e in rel]
         return d
 
 
-class Resource(Base, Entry):
-    __tablename__ = 'resources'
-
-    uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
-    track_uuid = sql.Column(sql.String(32), sql.ForeignKey(
-        'tracks.uuid',
-        ondelete='CASCADE'
-        ), nullable=False)
-    path = sql.Column(sql.String(1024), nullable=False)
-    codec = sql.Column(sql.String(16), nullable=False)
-    sample_rate = sql.Column(sql.Integer, nullable=False)
-    bitrate = sql.Column(sql.Integer, nullable=False)
-
-
-class Track(Base, Entry):
+class Track(Entry, Base):
     __tablename__ = 'tracks'
 
-    uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
-    track_number = sql.Column(sql.Integer)
-    total_tracks = sql.Column(sql.Integer)
-    disc_number = sql.Column(sql.Integer)
-    total_discs = sql.Column(sql.Integer)
-    title = sql.Column(sql.String(256))
-    artist = sql.Column(sql.String(256))
-    album_artist = sql.Column(sql.String(256))
-    album = sql.Column(sql.String(256))
-    compilation = sql.Column(sql.Boolean)
-    date = sql.Column(sql.Date)
-    label = sql.Column(sql.String(256))
-    isrc = sql.Column(sql.String(256))
-
-    resources = sql.orm.relationship(
-        'Resource',
-        passive_deletes=True,
-        backref=sql.orm.backref(
-            'track',
-            single_parent=True,
-            lazy='joined',
-            cascade='save-update, merge, delete, delete-orphan'
-            )
-        )
+    uuid = Column(String(32), primary_key=True, default=new_uuid)
+    track_number = Column(Integer)
+    total_tracks = Column(Integer)
+    disc_number = Column(Integer)
+    total_discs = Column(Integer)
+    title = Column(String(256))
+    artist = Column(String(256))
+    album_artist = Column(String(256))
+    album = Column(String(256))
+    compilation = Column(Boolean)
+    date = Column(Date)
+    label = Column(String(256))
+    isrc = Column(String(256))
 
 
-class Database:
-    Session = None
-    engine = None
+class Resource(Entry, Base):
+    __tablename__ = 'resources'
 
-    def __init__(self, **kwargs):
+    uuid = Column(String(32), primary_key=True, default=new_uuid)
+    track_uuid = Column(String(32), ForeignKey('tracks.uuid'),
+                        nullable=False)
+    path = Column(String(1024), nullable=False, unique=True)
+    codec = Column(String(16), nullable=False)
+    sample_rate = Column(Integer, nullable=False)
+    bitrate = Column(Integer, nullable=False)
 
-        if kwargs['driver'] == 'sqlite':
-            eng_str = '{driver}:///{path}'.format(**kwargs)
-        else:
-            eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}' \
-                      '?charset=utf8'.format(**kwargs)
-        self.engine = sql.create_engine(eng_str)
+    track = relationship(Track,
+                         backref=backref('resources',
+                                         single_parent=True,
+                                         uselist=True
+                                         )
+                         )
 
-        Base.metadata.create_all(self.engine)
 
-        self.Session = sql.orm.sessionmaker(
-            bind=self.engine,
-            expire_on_commit=False
-            )
-
-    @contextmanager
-    def get_session(self):
-        session = self.Session()
-        try:
-            yield session
-        except Exception as e:
-            print(type(e))
-            print(e)
-            session.rollback()
-        else:
-            session.commit()
-        finally:
-            session.close()
-
-    def get_tracks(self, session, join=False, one=False, **kwargs):
-        q = session.query(Track)
-        q = q.options(subqueryload(Track.resources))
-        filters_or = [
-            getattr(Track, c).like("%{}%".format(kwargs['text']))
-            for c in Track.__dict__
-            # TODO
-            # Here we are matching only for strings.
-            # We need a more solid logic.
-            if type(getattr(Track, c)) is str
-            if 'text' in kwargs
-            ]
-        filters_and = [
-            getattr(Track, k).like("%{}%".format(v))
-            for k, v in kwargs.items()
-            # TODO
-            # Here we don't check if kwargs are in Track.dict() since it is not
-            # a static method. Can it be?
-            ]
-        if join is True:
-            q = q.join(Resource)
-        q = q.filter(sql.or_(*filters_or))
-        q = q.filter(sql.and_(*filters_and))
-        if one is True:
-            q = q.one_or_none()
-        else:
-            q = q.all()
-        return q
-
-    def get_track_by_uuid(self, session, uuid, join=False):
-        q = session.query(Track)
-        if join is True:
-            q = q.join(Resource)
-        q = q.filter(Track.uuid == uuid).one_or_none()
-        return q
-
-    def get_resource_by_uuid(self, session, uuid, join=False):
-        q = session.query(Resource)
-        if join is True:
-            q = q.join(Track)
-        q = q.filter(Resource.uuid == uuid).one_or_none()
-        return q
-
-    def get_resource_by_path(self, session, path, join=False):
-        q = session.query(Resource)
-        if join is True:
-            q = q.join(Track)
-        q = q.filter(Resource.path == path).one_or_none()
-        return q
-
-    def update_resource_by_path(self, session, path):
-        res = self.get_resource_by_path(session, path)
-        if res is None:
-            res = Resource()
-            res.track = Track()
-        parse_resource(res, path)
-        session.add(res)
-
-    def clean_resources(self, session, paths):
-        res = session.query(Resource)\
-                .filter(~Resource.path.in_(paths))\
-                .all()
-        for r in res:
-            session.delete(r)
+def search_tracks(session, **kwargs):
+    q = bakery(lambda s: s.query(Track)
+                          .join(Track.resources)
+                          .options(subqueryload(Track.resources)))
+    for k, v in kwargs.items():
+        if k in Track.keys():
+            q += lambda f: f.filter(getattr(Track, k)
+                                    .like('%{}%'.format(sa.bindparam(k))))
+    result = q(session).params(**kwargs).all()
+    return result
