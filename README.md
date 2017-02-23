@@ -50,8 +50,8 @@ After the configuration and database building, you can run musicLibrary with:
 
 ## Configuration
 
-There are two configuration files: config.ini specifies how this software should
-behave and logging.conf specify how logging should work. In the docs/conf
+There are two configuration files: tersicore.conf specifies how this software should
+behave and logging.conf specify how logging should work. In the docs/config
 directory you can find some examples. Further logging documentation can be found
 [here][python-logging-config-dictschema].
 

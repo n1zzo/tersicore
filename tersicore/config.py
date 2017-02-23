@@ -4,19 +4,21 @@ import yaml
 
 
 DEFAULT_FILES = {
-    'tersicore': 'config.ini',
+    'tersicore': 'tersicore.conf',
     'logging': 'logging.conf'
     }
 
-DEFAULT_PATHS = ['/etc/tersicore/', '/usr/local/etc/tersicore/', 'conf/']
+DEFAULT_PATHS = ['/etc/tersicore/', '/usr/local/etc/tersicore/', '.']
 
 
 def get_default_path():
     for p in DEFAULT_PATHS:
-        if all([
+        files = [f for f in DEFAULT_FILES.values()]
+        are_files = [
             os.path.isfile(os.path.join(p, f))
-            for f in DEFAULT_FILES.values()
-        ]):
+            for f in files
+        ]
+        if all(are_files):
             return p
     else:
         raise Exception('Unable to find a configuration folder.')
