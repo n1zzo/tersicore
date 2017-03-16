@@ -43,7 +43,7 @@ def get_resource():
         with open(path, 'rb') as res_file:
             mimetype = 'audio/{}'.format(res.codec)
             return send_file(BytesIO(res_file.read()),
-                         mimetype=mimetype)
+                             mimetype=mimetype)
     except FileNotFoundError:
         abort(500)
 
@@ -54,7 +54,7 @@ def not_found(error):
 
 
 @app.errorhandler(500)
-def not_found(error):
+def internal_error(error):
     return make_response(jsonify({'error': 'Internal Server Error'}), 500)
 
 
