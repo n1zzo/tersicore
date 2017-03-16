@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, abort, make_response, send_file
+from flask import Flask, jsonify, abort, make_response, send_file, request
 from io import BytesIO
 
 from tersicore.config import Config
@@ -31,8 +31,9 @@ def get_tracks():
     return jsonify(tracks)
 
 
-@app.route('/resources/<string:res_uuid>', methods=['GET'])
-def get_resource(res_uuid):
+@app.route('/stream', methods=['GET'])
+def get_resource():
+    res_uuid = request.args.get("uuid")
     try:
         with db.get_session() as session:
             res = db.get_resource_by_uuid(session, res_uuid)
