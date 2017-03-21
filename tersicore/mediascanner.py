@@ -19,16 +19,14 @@ init_logging(config.logging)
 db = Database(**config.database)
 
 
-def get_resource_by_path(session, path, join=False):
+def get_resource(session, path):
     q = session.query(Resource)
-    if join is True:
-        q = q.join(Track)
     q = q.filter(Resource.path == path).one_or_none()
     return q
 
 
-def update_resource_by_path(session, path):
-    res = get_resource_by_path(session, path)
+def update_resource(session, path):
+    res = get_resource(session, path)
     if res is None:
         res = Resource()
         res.track = Track()
@@ -45,29 +43,26 @@ def clean_resources(session, paths):
 
 
 class WatchdogHandler(PatternMatchingEventHandler):
-    def __init__(self, parent, *args, **kwargs):
-        self.parent = parent
-        super().__init__(*args, **kwargs)
-
     def on_created(self, event):
         log.debug("Created file (%s) %s",
                   event.event_type, event.src_path)
         with db.get_session() as session:
-            update_resource_by_path(session, event.src_path)
+            update_resource(session, event.src_path)
 
     def on_modified(self, event):
         log.debug("Modified file (%s) %s",
                   event.event_type, event.src_path)
         with db.get_session() as session:
-            update_resource_by_path(session, event.src_path)
+            update_resource(session, event.src_path)
 
     def on_moved(self, event):
         log.debug("Moved file (%s) %s -> %s",
                   event.event_type, event.src_path, event.dest_path)
+
         with db.get_session() as session:
-            r = get_resource_by_path(session, event.src_path)
+            r = get_resource(session, event.src_path)
             if r is None:
-                update_resource_by_path(session, event.dest_path)
+                update_resource(session, event.dest_path)
             else:
                 r.path = event.dest_path
                 session.add(r)
@@ -76,7 +71,7 @@ class WatchdogHandler(PatternMatchingEventHandler):
         log.debug("Deleted file (%s) %s",
                   event.event_type, event.src_path)
         with db.get_session() as session:
-            res = get_resource_by_path(session, event.src_path)
+            res = get_resource(session, event.src_path)
             session.delete(res)
 
 
@@ -90,14 +85,13 @@ class MediaScanner:
         with db.get_session() as session:
             clean_resources(session, self.resources)
             for f in self.resources:
-                update_resource_by_path(session, f)
+                update_resource(session, f)
 
         observers = {path: Observer() for path in self.paths}
-        handler = WatchdogHandler(
-            self,
-            patterns=FORMATS_GLOB,
-            ignore_directories=True
-            )
+
+        handler = WatchdogHandler(patterns=FORMATS_GLOB,
+                                  ignore_directories=True)
+
         for path, observer in observers.items():
             observer.schedule(handler, path, recursive=True)
             observer.start()
