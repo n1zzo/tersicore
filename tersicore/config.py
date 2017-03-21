@@ -41,10 +41,12 @@ class Config:
         self.logging_config_path = os.path.join(self.basedir, logging_file)
 
         self.tersicore = ConfigParser()
-        self.logging = None
-
-        self.read()
-
-    def read(self):
         self.tersicore.read(self.tersicore_config_path)
+
+        self.database = self.tersicore['DATABASE']
+
+        self.scanner = self.tersicore['SCANNER']
+        self.mediascanner_paths = str(self.scanner['Path']).split(',')
+        self.mediascanner_formats = str(self.scanner['Formats']).split(',')
+
         self.logging = yaml.load(open(self.logging_config_path, 'r'))

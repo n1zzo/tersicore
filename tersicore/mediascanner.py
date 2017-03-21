@@ -127,16 +127,12 @@ def main():
     config = Config()
     init_logging(config.logging)
 
-    config_database = config.tersicore['DATABASE']
-    database = Database(**config_database)
-
-    config_scanner = config.tersicore['SCANNER']
-    config_mediascanner_paths = str(config_scanner['Path']).split(',')
-    config_mediascanner_formats = str(config_scanner['Formats']).split(',')
+    database = Database(**config.database)
 
     mediascanner = MediaScanner(
-        paths=config_mediascanner_paths,
-        formats=config_mediascanner_formats,
-        database=database)
+        paths=config.mediascanner_paths,
+        formats=config.mediascanner_formats,
+        database=database
+    )
 
     mediascanner.run()
