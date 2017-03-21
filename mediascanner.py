@@ -1,5 +1,5 @@
-from tersicore.mediascanner import MediaScanner
+from tersicore.mediascanner import scan_media
 
 
 if __name__ == '__main__':
-    MediaScanner().run()
+    scan_media()

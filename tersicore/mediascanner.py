@@ -11,12 +11,16 @@ from tersicore.database import Database, Resource, Track
 from tersicore.formats import parse_resource
 
 
+# config are used only in this first section
 config = Config()
 
 log = get_logger('mediascanner')
 init_logging(config.logging)
 
 db = Database(**config.database)
+
+scan_paths = config.mediascanner_paths
+# config.mediascanner_formats not used
 
 
 def get_resource(session, path):
@@ -75,39 +79,35 @@ class WatchdogHandler(PatternMatchingEventHandler):
             session.delete(res)
 
 
-class MediaScanner:
-    def __init__(self):
-        self.paths = config.mediascanner_paths
-        self.formats = config.mediascanner_formats
-        self.resources = self.get_resources_in_paths(self.paths)
+def get_matching_files(paths):
+    return [os.path.join(root, f)
+            for path in paths
+            for root, dirs, files in os.walk(path)
+            for f in files
+            if glob_match(f, FORMATS_GLOB)]
 
-    def run(self):
-        with db.get_session() as session:
-            clean_resources(session, self.resources)
-            for f in self.resources:
-                update_resource(session, f)
 
-        observers = {path: Observer() for path in self.paths}
+def scan_media():
+    resources = get_matching_files(scan_paths)
 
-        handler = WatchdogHandler(patterns=FORMATS_GLOB,
-                                  ignore_directories=True)
+    with db.get_session() as session:
+        clean_resources(session, resources)
+        for f in resources:
+            update_resource(session, f)
 
+    observers = {path: Observer() for path in scan_paths}
+
+    handler = WatchdogHandler(patterns=FORMATS_GLOB,
+                              ignore_directories=True)
+
+    for path, observer in observers.items():
+        observer.schedule(handler, path, recursive=True)
+        observer.start()
+
+    try:
+        while True:
+            sleep(1)
+    except KeyboardInterrupt:
         for path, observer in observers.items():
-            observer.schedule(handler, path, recursive=True)
-            observer.start()
-
-        try:
-            while True:
-                sleep(1)
-        except KeyboardInterrupt:
-            for path, observer in observers.items():
-                observer.stop()
-                observer.join()
-
-    def get_resources_in_paths(self, paths):
-        return [os.path.join(root, f)
-                for path in self.paths
-                for root, dirs, files in os.walk(path)
-                for f in files
-                if glob_match(f, FORMATS_GLOB)
-                ]
+            observer.stop()
+            observer.join()
