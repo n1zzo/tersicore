@@ -3,7 +3,7 @@ from io import BytesIO
 
 from tersicore.config import Config
 from tersicore.log import init_logging, get_logger
-from tersicore.database import Database
+from tersicore.database import Database, Track, Resource
 
 config = Config()
 
@@ -24,9 +24,8 @@ def greet():
 
 @app.route('/tracks', methods=['GET'])
 def get_tracks():
-    tracks = []
     with db.get_session() as session:
-        tracks = db.get_tracks(session, join=True)
+        tracks = session.query(Track).all()
         tracks = [t.dict() for t in tracks]
     return jsonify(tracks)
 
@@ -36,7 +35,9 @@ def get_resource():
     res_uuid = request.args.get("uuid")
     try:
         with db.get_session() as session:
-            res = db.get_resource_by_uuid(session, res_uuid)
+            res = session.query(Resource)\
+                         .filter(Resource.uuid == res_uuid)\
+                         .one_or_none()
         if res is None:
             abort(404)
         path = res.path

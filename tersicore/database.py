@@ -4,7 +4,6 @@ from datetime import date
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
-from sqlalchemy.orm import subqueryload
 
 Base = sqlalchemy.ext.declarative.declarative_base()
 
@@ -89,28 +88,22 @@ class Track(Base, Entry):
 
 
 class Database:
-    Session = None
-    engine = None
-
     def __init__(self, **kwargs):
-
         if kwargs['driver'] == 'sqlite':
             eng_str = '{driver}:///{path}'.format(**kwargs)
         else:
             eng_str = '{driver}://{user}:{password}@{host}:{port}/{database}' \
                       '?charset=utf8'.format(**kwargs)
-        self.engine = sql.create_engine(eng_str)
 
+        self.engine = sql.create_engine(eng_str)
         Base.metadata.create_all(self.engine)
 
-        self.Session = sql.orm.sessionmaker(
-            bind=self.engine,
-            expire_on_commit=False
-            )
+        self.make_session = sql.orm.sessionmaker(bind=self.engine,
+                                                 expire_on_commit=False)
 
     @contextmanager
     def get_session(self):
-        session = self.Session()
+        session = self.make_session()
         try:
             yield session
         except Exception as e:
@@ -121,46 +114,3 @@ class Database:
             session.commit()
         finally:
             session.close()
-
-    def get_tracks(self, session, join=False, one=False, **kwargs):
-        q = session.query(Track)
-        q = q.options(subqueryload(Track.resources))
-        filters_or = [
-            getattr(Track, c).like("%{}%".format(kwargs['text']))
-            for c in Track.__dict__
-            # TODO
-            # Here we are matching only for strings.
-            # We need a more solid logic.
-            if type(getattr(Track, c)) is str
-            if 'text' in kwargs
-            ]
-        filters_and = [
-            getattr(Track, k).like("%{}%".format(v))
-            for k, v in kwargs.items()
-            # TODO
-            # Here we don't check if kwargs are in Track.dict() since it is not
-            # a static method. Can it be?
-            ]
-        if join is True:
-            q = q.join(Resource)
-        q = q.filter(sql.or_(*filters_or))
-        q = q.filter(sql.and_(*filters_and))
-        if one is True:
-            q = q.one_or_none()
-        else:
-            q = q.all()
-        return q
-
-    def get_track_by_uuid(self, session, uuid, join=False):
-        q = session.query(Track)
-        if join is True:
-            q = q.join(Resource)
-        q = q.filter(Track.uuid == uuid).one_or_none()
-        return q
-
-    def get_resource_by_uuid(self, session, uuid, join=False):
-        q = session.query(Resource)
-        if join is True:
-            q = q.join(Track)
-        q = q.filter(Resource.uuid == uuid).one_or_none()
-        return q
