@@ -26,7 +26,7 @@ def greet():
 def get_tracks():
     with db.get_session() as session:
         tracks = session.query(Track).all()
-        tracks = [t.dict() for t in tracks]
+        tracks = [dict(t) for t in tracks]
     return jsonify(tracks)
 
 

@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from uuid import uuid4
-from datetime import date
 
 import sqlalchemy as sql
 import sqlalchemy.ext.declarative
@@ -12,39 +11,7 @@ def new_uuid():
     return uuid4().hex
 
 
-class Entry:
-    def __repr__(self):
-        return "<{}({})>"\
-            .format(self.__class__.__name__, ", ".join([
-                "{}='{}'".format(k, v)
-                for k, v in self.dict()
-                ]))
-
-    def dict(self):
-        d = {}
-        # Step #1
-        # Build the new dictionary with strings, integers and dates taken from
-        # self class attributes.
-        for k, v in self.__dict__.items():
-            if isinstance(v, (str, int, date)):
-                d[k] = v
-        # Step #2
-        # Since, for example, Track has no explicit resources attribute because
-        # it is backreferenced from Resource we need a little workaround to
-        # make sure all relationships are caught.
-        # __mapper__.relationships is a list of tuple where the first element
-        # of the tuple is the name of the relationship.
-        relationships = self.__mapper__.relationships.keys()
-        for r in relationships:
-            rel = getattr(self, r)
-            # If the relationship points to multiple rows we run .dict() again
-            # for each element and add this new list to the dictionary
-            if isinstance(rel, list):
-                d[r] = [e.dict() for e in rel]
-        return d
-
-
-class Resource(Base, Entry):
+class Resource(Base):
     __tablename__ = 'resources'
 
     uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
@@ -57,8 +24,15 @@ class Resource(Base, Entry):
     sample_rate = sql.Column(sql.Integer, nullable=False)
     bitrate = sql.Column(sql.Integer, nullable=False)
 
+    # Fields to be exposed in the rest API
+    def __iter__(self):
+        yield 'uuid', self.uuid
+        yield 'codec', self.codec
+        yield 'sample_rate', self.sample_rate
+        yield 'bitrate', self.bitrate
 
-class Track(Base, Entry):
+
+class Track(Base):
     __tablename__ = 'tracks'
 
     uuid = sql.Column(sql.String(32), primary_key=True, default=new_uuid)
@@ -85,6 +59,22 @@ class Track(Base, Entry):
             cascade='save-update, merge, delete, delete-orphan'
             )
         )
+
+    def __iter__(self):
+        yield 'uuid', self.uuid
+        yield 'track_number', self.track_number
+        yield 'total_tracks', self.total_tracks
+        yield 'disc_number', self.disc_number
+        yield 'total_discs', self.total_discs
+        yield 'title', self.title
+        yield 'artist', self.artist
+        yield 'album_artist', self.album_artist
+        yield 'album', self.album
+        yield 'compilation', self.compilation
+        yield 'date', self.date
+        yield 'label', self.label
+        yield 'isrc', self.isrc
+        yield 'resources', [dict(r) for r in self.resources]
 
 
 class Database:
