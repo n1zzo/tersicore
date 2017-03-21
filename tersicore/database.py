@@ -6,8 +6,6 @@ import sqlalchemy as sql
 import sqlalchemy.ext.declarative
 from sqlalchemy.orm import subqueryload
 
-from tersicore.formats import parse_resource
-
 Base = sqlalchemy.ext.declarative.declarative_base()
 
 
@@ -166,25 +164,3 @@ class Database:
             q = q.join(Track)
         q = q.filter(Resource.uuid == uuid).one_or_none()
         return q
-
-    def get_resource_by_path(self, session, path, join=False):
-        q = session.query(Resource)
-        if join is True:
-            q = q.join(Track)
-        q = q.filter(Resource.path == path).one_or_none()
-        return q
-
-    def update_resource_by_path(self, session, path):
-        res = self.get_resource_by_path(session, path)
-        if res is None:
-            res = Resource()
-            res.track = Track()
-        parse_resource(res, path)
-        session.add(res)
-
-    def clean_resources(self, session, paths):
-        res = session.query(Resource)\
-                .filter(~Resource.path.in_(paths))\
-                .all()
-        for r in res:
-            session.delete(r)

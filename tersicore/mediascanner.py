@@ -9,8 +9,35 @@ from tersicore.log import get_logger
 from tersicore.formats import FORMATS_GLOB
 from tersicore.formats import glob_match
 
+from tersicore.database import Resource, Track
+from tersicore.formats import parse_resource
 
 log = get_logger('mediascanner')
+
+
+def get_resource_by_path(session, path, join=False):
+    q = session.query(Resource)
+    if join is True:
+        q = q.join(Track)
+    q = q.filter(Resource.path == path).one_or_none()
+    return q
+
+
+def update_resource_by_path(session, path):
+    res = get_resource_by_path(session, path)
+    if res is None:
+        res = Resource()
+        res.track = Track()
+    parse_resource(res, path)
+    session.add(res)
+
+
+def clean_resources(session, paths):
+    res = session.query(Resource)\
+            .filter(~Resource.path.in_(paths))\
+            .all()
+    for r in res:
+        session.delete(r)
 
 
 class WatchdogHandler(PatternMatchingEventHandler):
@@ -23,21 +50,21 @@ class WatchdogHandler(PatternMatchingEventHandler):
         log.debug("Created file (%s) %s",
                   event.event_type, event.src_path)
         with self.db.get_session() as session:
-            self.db.update_resource_by_path(session, event.src_path)
+            update_resource_by_path(session, event.src_path)
 
     def on_modified(self, event):
         log.debug("Modified file (%s) %s",
                   event.event_type, event.src_path)
         with self.db.get_session() as session:
-            self.db.update_resource_by_path(session, event.src_path)
+            update_resource_by_path(session, event.src_path)
 
     def on_moved(self, event):
         log.debug("Moved file (%s) %s -> %s",
                   event.event_type, event.src_path, event.dest_path)
         with self.db.get_session() as session:
-            r = self.db.get_resource_by_path(session, event.src_path)
+            r = get_resource_by_path(session, event.src_path)
             if r is None:
-                self.db.update_resource_by_path(session, event.dest_path)
+                update_resource_by_path(session, event.dest_path)
             else:
                 r.path = event.dest_path
                 session.add(r)
@@ -46,7 +73,7 @@ class WatchdogHandler(PatternMatchingEventHandler):
         log.debug("Deleted file (%s) %s",
                   event.event_type, event.src_path)
         with self.db.get_session() as session:
-            res = self.db.get_resource_by_path(session, event.src_path)
+            res = get_resource_by_path(session, event.src_path)
             session.delete(res)
 
 
@@ -54,16 +81,14 @@ class MediaScanner:
     def __init__(self, paths, formats, database):
         self.paths = paths
         self.formats = formats
-
         self.resources = self.get_resources_in_paths(self.paths)
-
         self.db = database
 
     def run(self):
         with self.db.get_session() as session:
-            self.db.clean_resources(session, self.resources)
+            clean_resources(session, self.resources)
             for f in self.resources:
-                self.db.update_resource_by_path(session, f)
+                update_resource_by_path(session, f)
 
         observers = {path: Observer() for path in self.paths}
         handler = WatchdogHandler(
