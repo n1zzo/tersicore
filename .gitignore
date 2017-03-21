@@ -88,5 +88,6 @@ ENV/
 # Rope project settings
 .ropeproject
 
-# Config folder
-conf/
+# Config file
+tersicore.conf
+logging.conf
