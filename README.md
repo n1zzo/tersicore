@@ -3,7 +3,7 @@
 ## Setup
 
 These are the instruction for deploying musicLibrary on an nginx environment.
-You will need python3, python3-pip, nginx, uwsgi and python3-virtualenv.
+You will need python3, nginx, uwsgi and python3-virtualenv.
 Clone latest project tree from master branch:
 
     git clone https://github.com/n1zzo/musicLibrary
@@ -40,33 +40,42 @@ Set the nginx worker process user as the one you use to run uwsgi:
 
     user user [group];
 
-As a last step copy uwsgi ini file from docs/conf folder:
+After the configuration and database building, you can run tersicore with:
 
-    cp docs/uwsgi/tersicore_rest.ini conf/
-
-After the configuration and database building, you can run musicLibrary with:
-
-    uwsgi --ini conf/tersicore_rest.ini
+    uwsgi --ini docs/uwsgi/tersicore_rest.ini
 
 ## Configuration
 
-There are two configuration files: tersicore.conf specifies how this software should
-behave and logging.conf specify how logging should work. In the docs/config
-directory you can find some examples. Further logging documentation can be found
+Tersicore can configured with two files:
+
+- tersicore.conf
+- logging.conf
+
+The first one defines the database parameters and the paths to be scanned
+for music files.
+
+There are two example configuration files, one for a MySQL-based setup:
+
+    cp docs/config/tersicore_mysql.conf tersicore.conf
+
+And another one for SQLite-based setup:
+
+    cp docs/config/tersicore_sqlite.conf tersicore.conf
+
+Just copy one of them and customize it as needed.
+
+Logging format and options are defined in logging.conf.
+Two example configuration files are provided, either for debug use:
+
+    cp docs/config/logging_debug.conf logging.conf
+
+Or production use:
+
+    cp docs/config/logging_production.conf logging.conf
+
+Just choose the one that fits your needs.
+Further logging documentation can be found
 [here][python-logging-config-dictschema].
-
-You should initialize the Config object once. You can optionally specify a
-config directory and override default file names.
-
-    from tersicore.config import Config
-    config = Config('/var/tersicore', 'tersicore.conf', 'log.conf')
-
-Tersicore and logging configurations are shown to the user as dictionaries.
-
-    conf_tersicore = config.tersicore
-    conf_logging = config.logging
-    
-    conf_db = conf_tersicore['DATABASE']
 
 ## Database
 
