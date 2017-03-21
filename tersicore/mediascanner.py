@@ -124,21 +124,8 @@ class MediaScanner:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-d', '--config-dir')
-    parser.add_argument('--tersicore-config')
-    parser.add_argument('--logging-config')
-
-    args = parser.parse_args()
-
-    config = Config(
-        basedir=args.config_dir,
-        tersicore_file=args.tersicore_config,
-        logging_file=args.logging_config)
-
-    config_logging = config.logging
-    init_logging(config_logging)
+    config = Config()
+    init_logging(config.logging)
 
     config_database = config.tersicore['DATABASE']
     database = Database(**config_database)
