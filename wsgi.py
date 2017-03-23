@@ -1,4 +1,4 @@
-from rest import app
+from cli import rest
 
 if __name__ == '__main__':
-    app.run()
+    rest()

@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
 from flask import Flask, jsonify, abort, make_response, send_file, request
 from io import BytesIO
+import click
 
 from tersicore.config import Config
 from tersicore.log import init_logging, get_logger
@@ -9,12 +11,17 @@ config = Config()
 
 config_logging = config.logging
 init_logging(config_logging)
-log = get_logger('rest')
+log = get_logger('cli')
 
 config_database = config.tersicore['DATABASE']
 db = Database(**config_database)
 
 app = Flask(__name__)
+
+
+@click.group()
+def cli():
+    pass
 
 
 @app.route("/")
@@ -59,5 +66,11 @@ def internal_error(error):
     return make_response(jsonify({'error': 'Internal Server Error'}), 500)
 
 
+@cli.command('rest')
+@click.option('--debug', is_flag=True)
+def rest(debug):
+    app.run(host='0.0.0.0', debug=debug)
+
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    cli()
