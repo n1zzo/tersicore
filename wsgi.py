@@ -1,4 +1,4 @@
-from cli import rest
+from tersicore import api
 
 if __name__ == '__main__':
-    rest()
+    api.rest(debug=False)
