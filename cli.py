@@ -7,6 +7,9 @@ from tersicore.config import Config
 from tersicore.log import init_logging, get_logger
 from tersicore.database import Database, Track, Resource
 
+from tersicore.mediascanner import scan_media
+
+
 config = Config()
 
 config_logging = config.logging
@@ -22,6 +25,11 @@ app = Flask(__name__)
 @click.group()
 def cli():
     pass
+
+
+@cli.command('scan')
+def scan():
+    scan_media()
 
 
 @app.route("/")
