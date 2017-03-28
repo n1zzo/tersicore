@@ -3,3 +3,4 @@ pymysql
 watchdog
 mutagen
 flask
+Flask-HMAC

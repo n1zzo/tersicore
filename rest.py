@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, abort, make_response, send_file
+from flask_hmac import Hmac
 from io import BytesIO
 
 from tersicore.config import Config
@@ -15,6 +16,8 @@ config_database = config.tersicore['DATABASE']
 db = Database(**config_database)
 
 app = Flask(__name__)
+app.config.from_object('rest_config.Config')
+hm = Hmac(app)
 
 
 @app.route("/")
@@ -23,6 +26,7 @@ def greet():
 
 
 @app.route('/tracks', methods=['GET'])
+@hm.check_hmac
 def get_tracks():
     with db.get_session() as session:
         tracks = session.query(Track).all()
@@ -31,6 +35,7 @@ def get_tracks():
 
 
 @app.route('/tracks/<string:track_uuid>', methods=['GET'])
+@hm.check_hmac
 def get_track(track_uuid):
     with db.get_session() as session:
         track = session.query(Track)\
@@ -41,6 +46,7 @@ def get_track(track_uuid):
 
 
 @app.route('/stream/<string:res_uuid>', methods=['GET'])
+@hm.check_hmac
 def get_resource(res_uuid):
     try:
         with db.get_session() as session:
